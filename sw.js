@@ -1,43 +1,59 @@
-const CACHE_NAME = 'frequency-map-v1';
-const ASSETS = [
+// نسخهٔ کش — این خط رو دستی عوض نکن؛ گیت‌هاب اکشن خودش هر بار پوش می‌کنی این رو عوض می‌کنه
+const CACHE_VERSION = 'v1';
+const CACHE_NAME = 'faravani-cache-' + CACHE_VERSION;
+const PRECACHE_URLS = [
   './',
   './index.html',
-  './manifest.json'
+  './manifest.json',
+  './icons/icon-192.png'
 ];
 
-self.addEventListener('install', function(event){
-  event.waitUntil(
-    caches.open(CACHE_NAME).then(function(cache){
-      return cache.addAll(ASSETS);
-    })
-  );
+self.addEventListener('install', event => {
   self.skipWaiting();
-});
-
-self.addEventListener('activate', function(event){
   event.waitUntil(
-    caches.keys().then(function(keys){
-      return Promise.all(
-        keys.filter(function(key){ return key !== CACHE_NAME; })
-            .map(function(key){ return caches.delete(key); })
-      );
-    })
+    caches.open(CACHE_NAME)
+      .then(cache => cache.addAll(PRECACHE_URLS))
+      .catch(() => {})
   );
-  self.clients.claim();
 });
 
-self.addEventListener('fetch', function(event){
-  event.respondWith(
-    caches.match(event.request).then(function(cached){
-      return cached || fetch(event.request).then(function(response){
-        if (response && response.status === 200 && event.request.method === 'GET') {
-          var copy = response.clone();
-          caches.open(CACHE_NAME).then(function(cache){ cache.put(event.request, copy); });
-        }
-        return response;
-      }).catch(function(){
-        return cached;
-      });
-    })
+self.addEventListener('activate', event => {
+  event.waitUntil(
+    caches.keys()
+      .then(keys => Promise.all(keys.filter(k => k !== CACHE_NAME).map(k => caches.delete(k))))
+      .then(() => self.clients.claim())
   );
+});
+
+self.addEventListener('fetch', event => {
+  const req = event.request;
+  const isHTML = req.mode === 'navigate' ||
+    (req.method === 'GET' && (req.headers.get('accept') || '').includes('text/html'));
+
+  if (isHTML) {
+    // صفحه‌ی اصلی: همیشه اول از اینترنت بگیر تا آخرین نسخه نشون داده بشه
+    event.respondWith(
+      fetch(req)
+        .then(res => {
+          const copy = res.clone();
+          caches.open(CACHE_NAME).then(cache => cache.put(req, copy));
+          return res;
+        })
+        .catch(() => caches.match(req).then(res => res || caches.match('./index.html')))
+    );
+    return;
+  }
+
+  // بقیه‌ی فایل‌ها (آیکون، مانیفست و ...): اول کش، بعد شبکه
+  event.respondWith(
+    caches.match(req).then(cached => cached || fetch(req).then(res => {
+      const copy = res.clone();
+      caches.open(CACHE_NAME).then(cache => cache.put(req, copy));
+      return res;
+    }))
+  );
+});
+
+self.addEventListener('message', event => {
+  if (event.data === 'SKIP_WAITING') self.skipWaiting();
 });
