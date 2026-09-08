@@ -1287,6 +1287,83 @@
 #grat-root .today-btn2[data-done="true"]{background:rgba(255,255,255,.25);}
 #grat-root ::selection{background:var(--gold-300);}
 
+/* ---------- belief & attention flow ---------- */
+#grat-root .belief-flow-card{margin:0 18px 14px; padding:16px 18px; background:var(--surface); border-radius:16px; border:1px solid var(--line);}
+#grat-root .belief-flow-card .bf-head{display:flex; align-items:center; gap:8px; font-size:14px; font-weight:800; margin-bottom:8px;}
+#grat-root .belief-flow-card .bf-desc{font-size:12px; color:var(--muted); margin:0 0 10px;}
+#grat-root .belief-flow-card textarea{
+  width:100%; font-family:inherit; font-size:13.5px; border:1px solid var(--line);
+  border-radius:12px; padding:11px 13px; outline:none; background:var(--card); color:var(--ink); resize:vertical;
+}
+#grat-root .belief-flow-card textarea:focus{border-color:var(--emerald-300);}
+#grat-root .quote-box{
+  border-right:3px solid var(--emerald-500); padding:8px 12px; margin-bottom:10px;
+  font-size:11.5px; color:var(--ink-soft); background:var(--card); border-radius:8px; line-height:1.9;
+}
+#grat-root .intensity-row{margin-top:12px;}
+#grat-root .intensity-row .intensity-labels{display:flex; justify-content:space-between; font-size:11px; color:var(--muted); margin-bottom:6px;}
+#grat-root input[type=range].bf-range{
+  -webkit-appearance:none; appearance:none; width:100%; height:6px; border-radius:6px;
+  background:var(--line); outline:none; cursor:pointer; margin:4px 0;
+  direction:ltr;
+}
+#grat-root input[type=range].bf-range::-webkit-slider-thumb{
+  -webkit-appearance:none; width:20px; height:20px; border-radius:50%;
+  background:var(--emerald-500); border:3px solid #fff; box-shadow:0 1px 4px rgba(0,0,0,.3); cursor:pointer;
+}
+#grat-root input[type=range].bf-range::-moz-range-thumb{
+  width:20px; height:20px; border-radius:50%; border:3px solid #fff;
+  background:var(--emerald-500); box-shadow:0 1px 4px rgba(0,0,0,.3); cursor:pointer;
+}
+#grat-root input[type=range].bf-range.gold::-webkit-slider-thumb{background:var(--gold-500);}
+#grat-root input[type=range].bf-range.gold::-moz-range-thumb{background:var(--gold-500);}
+#grat-root .ras-input-row{display:flex; align-items:flex-start; gap:8px;}
+#grat-root .ras-input-row textarea{flex:1;}
+#grat-root .ras-add-btn{
+  flex:none; width:40px; height:40px; border-radius:50%; border:none;
+  background:var(--emerald-500); color:#fff; font-size:20px; font-weight:800;
+  cursor:pointer; display:flex; align-items:center; justify-content:center; line-height:1;
+}
+#grat-root .tracking-list{margin-top:8px;}
+#grat-root .tracking-item{
+  display:flex; justify-content:space-between; align-items:center; gap:10px;
+  background:var(--card); border:1px solid var(--line); border-radius:10px;
+  padding:8px 12px; margin-bottom:6px; font-size:12.5px;
+}
+#grat-root .tracking-item .rm{background:none; border:none; color:#b3452f; cursor:pointer; font-size:15px; font-weight:800; flex:none;}
+#grat-root .ras-btn-row{display:flex; align-items:center; gap:10px; margin-top:10px;}
+#grat-root .ras-activate-btn{
+  flex:1; border:none; border-radius:12px; padding:11px 14px; font-family:inherit; font-weight:800; font-size:12.5px;
+  background:var(--emerald-500); color:#fff; cursor:pointer; transition:.2s;
+}
+#grat-root .ras-activate-btn.active{background:var(--emerald-900);}
+#grat-root .ras-radar{
+  flex:none; width:36px; height:36px; border-radius:50%;
+  background:radial-gradient(circle, var(--emerald-300) 0%, transparent 70%);
+  display:flex; align-items:center; justify-content:center; font-size:17px;
+  opacity:.4; transition:opacity .3s;
+}
+#grat-root .ras-radar.spin{opacity:1; animation:ras-spin 1.6s linear infinite;}
+@keyframes ras-spin{ from{transform:rotate(0deg);} to{transform:rotate(360deg);} }
+#grat-root .evidence-counter{display:flex; align-items:center; justify-content:space-between; gap:12px;}
+#grat-root .evidence-counter .ev-num{font-size:26px; font-weight:800; color:var(--emerald-700);}
+#grat-root .evidence-counter .ev-label{font-size:11.5px; color:var(--muted);}
+#grat-root .ev-add-btn{border-radius:12px; padding:9px 14px; font-family:inherit; font-weight:700; font-size:12px; background:var(--surface-2); color:var(--ink); cursor:pointer; border:1px solid var(--line); flex:none;}
+#grat-root .lever-labels{display:flex; justify-content:space-between; font-size:11px; color:var(--muted); margin-top:6px; direction:ltr;}
+#grat-root .visual-upload-row{margin-top:10px;}
+#grat-root .visual-upload-btn{
+  display:inline-block; border-radius:12px; padding:9px 14px; font-family:inherit; font-weight:700; font-size:12px;
+  background:var(--surface-2); color:var(--ink); cursor:pointer; border:1px solid var(--line);
+}
+#grat-root .visual-gallery{display:flex; flex-wrap:wrap; gap:8px; margin-top:10px;}
+#grat-root .visual-gallery .vg-item{position:relative; width:72px; height:72px; border-radius:10px; overflow:hidden; border:1px solid var(--line); flex:none;}
+#grat-root .visual-gallery .vg-item img{width:100%; height:100%; object-fit:cover; display:block;}
+#grat-root .visual-gallery .vg-item .vg-rm{
+  position:absolute; top:3px; left:3px; width:18px; height:18px; border-radius:50%;
+  background:rgba(0,0,0,.6); color:#fff; border:none; font-size:11px; line-height:1;
+  cursor:pointer; display:flex; align-items:center; justify-content:center; padding:0;
+}
+
 
 </style>
 </head>
@@ -3479,38 +3556,71 @@
       <p>مدیتیشن + تجسم + تولید عمدیِ احساسِ باور جدید، پیش از رخ‌دادنش در واقعیت. بخش تفسیرهای کوانتومی‌تر او در جامعهٔ علمی محل مناقشه است و بیشتر جنبهٔ فلسفی دارد تا اثبات‌شدهٔ فیزیکی؛ بخش RAS و تکرار عصبی شواهد علمی محکم‌تری دارد.</p>
     </div>
 
-    <div class="section-label"><h2>✍️ باور را بازنویسی کن</h2></div>
-    <div class="b-field">
-      <label for="b-old">باور قدیمی</label>
-      <textarea id="b-old" rows="2" placeholder="مثلاً: من آدم منظمی نیستم."></textarea>
-    </div>
-    <div class="b-field">
-      <label for="b-new">باور جدید (باورپذیر و امروزی)</label>
-      <textarea id="b-new" rows="2" placeholder="مثلاً: دارم قدم‌به‌قدم یاد می‌گیرم منظم‌تر باشم."></textarea>
-    </div>
-    <div class="b-field">
-      <label for="b-emotion">احساسی که باید همراهش بسازی</label>
-      <input id="b-emotion" placeholder="مثلاً: اطمینان آرام">
-    </div>
-    <div class="b-field">
-      <label for="b-evidence">یک نشانهٔ کوچک واقعی که همین حالا این باور را تأیید می‌کند</label>
-      <input id="b-evidence" placeholder="مثلاً: دیروز یک کار را کامل تمام کردم">
-    </div>
-    <div style="margin:0 18px 6px;">
-      <button class="cta-buy" style="margin:0; width:100%;" onclick="addBelief()">ذخیره و شروع تثبیت</button>
+    <div class="section-label"><h2>🧠 باور و توجه</h2></div>
+
+    <div class="belief-flow-card">
+      <div class="bf-head">💭 ذهنیت قدیمی</div>
+      <p class="bf-desc">ذهنیتی که می‌خواهی تغییرش بدهی:</p>
+      <div class="quote-box">«من بی‌عرضه‌ام.»<br>«پول درآوردن سخت است.»<br>«من خوش‌شانس نیستم.»</div>
+      <textarea id="b-old" rows="2" placeholder="ذهنیت قدیمی‌ات را اینجا بنویس..." oninput="updateBeliefField('oldText', this.value)"></textarea>
+      <div class="intensity-row">
+        <div class="intensity-labels"><span>شدت ذهنیت</span><span id="b-old-intensity-val">۵۰</span></div>
+        <input type="range" class="bf-range" id="b-old-intensity" min="0" max="100" value="50" oninput="updateBeliefField('oldIntensity', this.value)">
+      </div>
     </div>
 
-    <div id="belief-list" style="margin-top:16px;"></div>
-    <div id="belief-empty" class="empty-hint" style="display:none;">
-      هنوز باوری ثبت نکرده‌ای. فرم بالا را پر کن.
+    <div class="belief-flow-card">
+      <div class="bf-head">🌱 ذهنیت جدید</div>
+      <p class="bf-desc">می‌خواهی چه ذهنیتی را تقویت کنی؟</p>
+      <div class="quote-box">«من می‌توانم راحت‌تر پول دربیاورم.»<br>«من به توانایی‌هایم اعتماد دارم.»<br>«من می‌توانم فرصت‌های خوبی را ببینم.»</div>
+      <textarea id="b-new" rows="2" placeholder="ذهنیت جدید‌ات را اینجا بنویس..." oninput="updateBeliefField('newText', this.value)"></textarea>
+      <div class="intensity-row">
+        <div class="intensity-labels"><span>شدت ذهنیت جدید</span><span id="b-new-intensity-val">۵۰</span></div>
+        <input type="range" class="bf-range gold" id="b-new-intensity" min="0" max="100" value="50" oninput="updateBeliefField('newIntensity', this.value)">
+      </div>
     </div>
 
-    <div class="section-label"><h2>📿 پروتکل روزانه</h2></div>
-    <div class="step-row"><div class="snum">۱</div><div><h4>آگاهی لحظه‌ای</h4><p>هر وقت باور قدیمی فعال شد، اسمش را بگذار: «این مسیر عصبی قدیمی است، نه واقعیت من.»</p></div></div>
-    <div class="step-row"><div class="snum">۲</div><div><h4>مدیتیشن و تجسم (۵ تا ۱۰ دقیقه)</h4><p>صحنه‌ای کوتاه تجسم کن که در آن باور جدید یک لحظهٔ عادی از آینده است.</p></div></div>
-    <div class="step-row"><div class="snum">۳</div><div><h4>تولید عمدی احساس</h4><p>همان احساسی که در فرم نوشتی را پیش از هر دلیل بیرونی، در بدن بساز.</p></div></div>
-    <div class="step-row"><div class="snum">۴</div><div><h4>تکرار کلامی کوتاه</h4><p>باور جدید را ۳ بار آرام تکرار کن تا در بدن جا بیفتد.</p></div></div>
-    <div class="step-row"><div class="snum">۵</div><div><h4>ثبت روز</h4><p>پایین همین صفحه، امروز را «انجام‌شده» بزن تا زنجیرهٔ تکرار را ببینی.</p></div></div>
+    <div class="belief-flow-card">
+      <div class="bf-head">👁️ به مغزت بگو چه چیزهایی را ردیابی کند</div>
+      <p class="bf-desc">می‌تواند شامل ذهنیت جدید یا خواسته‌ات باشد.</p>
+      <div class="ras-input-row">
+        <textarea id="b-tracking" rows="1"></textarea>
+        <button class="ras-add-btn" onclick="addTrackingItem()">+</button>
+      </div>
+      <div class="tracking-list" id="tracking-list"></div>
+      <div class="ras-btn-row">
+        <button class="ras-activate-btn" id="ras-activate-btn" onclick="toggleTracking()">فعال کردن ردیابی</button>
+        <div class="ras-radar" id="ras-radar">📡</div>
+      </div>
+    </div>
+
+    <div class="belief-flow-card">
+      <div class="bf-head">🔎 موارد و شواهدی که پیدا کردی</div>
+      <div class="evidence-counter">
+        <div><div class="ev-num" id="ev-count">۰</div><div class="ev-label">مورد امروز پیدا شد</div></div>
+        <button class="ev-add-btn" onclick="addEvidence()">+ ثبت مورد جدید</button>
+      </div>
+      <textarea id="b-evidence-note" rows="2" style="margin-top:10px;" placeholder="متن (اختیاری)"></textarea>
+    </div>
+
+    <div class="belief-flow-card">
+      <div class="bf-head">🔥 تقویت توجه</div>
+      <p class="bf-desc">اهرم توجه</p>
+      <input type="range" class="bf-range gold" id="b-attention-lever" min="0" max="100" value="50" oninput="updateBeliefField('attentionLever', this.value)">
+      <div class="lever-labels"><span>🔽 کم — توجه کمتر</span><span>زیاد — توجه بیشتر 🔼</span></div>
+      <div class="quote-box" style="margin-top:10px;">هرچه اهرم را بالاتر ببری، در طول روز بیشتر به دنبال شواهد مرتبط با ذهنیت جدیدت یا خواسته‌ات می‌گردی.</div>
+    </div>
+
+    <div class="belief-flow-card">
+      <div class="bf-head">✨ تصویرسازی</div>
+      <p class="bf-desc">خودت را در حالی ببین که به خواسته‌ات رسیده‌ای. صحنه را ببین. احساسش را حس کن. چند لحظه در آن بمان... و رها کن.</p>
+      <textarea id="b-visual-note" rows="2" placeholder="📝 یادداشت من (اختیاری)" oninput="updateBeliefField('visualNote', this.value)"></textarea>
+      <div class="visual-upload-row">
+        <label class="visual-upload-btn" for="visual-image-input">+ افزودن عکس</label>
+        <input type="file" id="visual-image-input" accept="image/*" multiple style="display:none" onchange="handleVisualImages(this.files)">
+      </div>
+      <div class="visual-gallery" id="visual-gallery"></div>
+    </div>
 
     <div class="section-label"><h2>🔥 ردیاب پیوستگی</h2></div>
     <div class="streak-box">
@@ -3518,7 +3628,7 @@
         <div class="snum2" id="b-streak">۰</div>
         <div class="slabel">روز پیاپی</div>
       </div>
-      <button class="today-btn2" id="today-btn2" onclick="toggleToday()">امروز تمرین کردم</button>
+      <button class="today-btn2" id="today-btn2" onclick="toggleToday()">✨ انجام دادم</button>
     </div>
   </section>
 
@@ -3666,8 +3776,12 @@ function loadState(){
       if(!s.gratitude) s.gratitude = [];
       if(!s.history) s.history = [];
       if(!s.beliefs) s.beliefs = [];
+      if(!s.currentBelief) s.currentBelief = defaultCurrentBelief();
+      if(!s.currentBelief.trackingItems) s.currentBelief.trackingItems = [];
+      if(!s.currentBelief.visualImages) s.currentBelief.visualImages = [];
+      if(!s.evidenceLog) s.evidenceLog = [];
       if(!s.practiceLog) s.practiceLog = [];
-      if(!s.loginId) s.loginId = '';
+      if(!s.loginId) s.loginId = 'local-guest';
       if(typeof s.alarmEnabled !== 'boolean') s.alarmEnabled = false;
       if(!s.alarmTime) s.alarmTime = '20:00';
       if(!s.bankName) s.bankName = 'بانک فراوانی';
@@ -3678,8 +3792,11 @@ function loadState(){
       return s;
     }
   }catch(e){}
-  return { name:'', currency:'', startDate:'', history:[], gratitude:[], beliefs:[], practiceLog:[], loginId:'', alarmEnabled:false, alarmTime:'20:00',
+  return { name:'', currency:'', startDate:'', history:[], gratitude:[], beliefs:[], currentBelief:defaultCurrentBelief(), evidenceLog:[], practiceLog:[], loginId:'local-guest', alarmEnabled:false, alarmTime:'20:00',
     bankName:'بانک فراوانی', cardNumber:'5859 8312 8347 6690', cardExpiry:'∞ / ∞', cardCVV:'۱۴۰', cardTheme:'emerald' };
+}
+function defaultCurrentBelief(){
+  return { oldText:'', oldIntensity:50, newText:'', newIntensity:50, trackingItems:[], trackingActive:false, attentionLever:50, visualNote:'', visualImages:[] };
 }
 function saveState(){
   localStorage.setItem(STORAGE_KEY, JSON.stringify(state));
@@ -3827,10 +3944,6 @@ function iconOrImage(item){
 /* ---------------- login modal ---------------- */
 let loginTab = 'phone';
 function ensureLogin(){
-  if(!state.loginId){
-    document.getElementById('login-modal').classList.add('show');
-    return true;
-  }
   return false;
 }
 function switchLoginTab(tab){
@@ -4238,53 +4351,111 @@ function renderHistory(){
   });
 }
 
-/* ---------------- belief rewrite tool ---------------- */
-function addBelief(){
-  const oldEl = document.getElementById('b-old');
-  const newEl = document.getElementById('b-new');
-  const emoEl = document.getElementById('b-emotion');
-  const evEl = document.getElementById('b-evidence');
-  const oldBelief = oldEl.value.trim();
-  const newBelief = newEl.value.trim();
-  if(!oldBelief){ toast('باور قدیمی رو بنویس'); oldEl.focus(); return; }
-  if(!newBelief){ toast('باور جدید رو بنویس'); newEl.focus(); return; }
-  state.beliefs.push({
-    id: Date.now()+Math.random(),
-    oldBelief, newBelief,
-    emotion: emoEl.value.trim(),
-    evidence: evEl.value.trim()
-  });
+/* ---------------- belief & attention flow ---------------- */
+function updateBeliefField(field, value){
+  if(!state.currentBelief) state.currentBelief = defaultCurrentBelief();
+  const numericFields = ['oldIntensity','newIntensity','attentionLever'];
+  state.currentBelief[field] = numericFields.includes(field) ? Number(value) : value;
   saveState();
-  oldEl.value=''; newEl.value=''; emoEl.value=''; evEl.value='';
-  renderBeliefList();
-  toast('باور جدید ذخیره شد ✨');
+  if(field==='oldIntensity') document.getElementById('b-old-intensity-val').textContent = Number(value).toLocaleString('fa-IR');
+  if(field==='newIntensity') document.getElementById('b-new-intensity-val').textContent = Number(value).toLocaleString('fa-IR');
 }
-function deleteBelief(id){
-  state.beliefs = state.beliefs.filter(b=>b.id!==id);
+function addTrackingItem(){
+  if(!state.currentBelief) state.currentBelief = defaultCurrentBelief();
+  const el = document.getElementById('b-tracking');
+  const text = el.value.trim();
+  if(!text){ toast('یه چیزی بنویس'); el.focus(); return; }
+  if(!state.currentBelief.trackingItems) state.currentBelief.trackingItems = [];
+  state.currentBelief.trackingItems.push({ id: Date.now()+Math.random(), text });
+  state.currentBelief.trackingActive = true;
+  el.value = '';
   saveState();
-  renderBeliefList();
+  renderTrackingList();
+  renderTrackingState();
+  toast('اضافه شد ✨');
 }
-function renderBeliefList(){
-  const list = document.getElementById('belief-list');
-  const empty = document.getElementById('belief-empty');
-  if(state.beliefs.length===0){
-    list.innerHTML=''; empty.style.display='block'; return;
-  }
-  empty.style.display='none';
-  list.innerHTML = [...state.beliefs].reverse().map(b=>`
-    <div class="belief-card">
-      <div class="old">${escapeHtml(b.oldBelief)}</div>
-      <div class="arrow">↓ تثبیت با احساسِ «${escapeHtml(b.emotion||'—')}»</div>
-      <div class="new">${escapeHtml(b.newBelief)}</div>
-      <div class="meta">
-        <span>${b.evidence ? 'نشانه: '+escapeHtml(b.evidence) : ''}</span>
-        <button class="del" onclick="deleteBelief(${b.id})">حذف</button>
-      </div>
+function removeTrackingItem(id){
+  state.currentBelief.trackingItems = (state.currentBelief.trackingItems||[]).filter(t=>t.id!==id);
+  saveState();
+  renderTrackingList();
+}
+function renderTrackingList(){
+  const list = document.getElementById('tracking-list');
+  const items = (state.currentBelief && state.currentBelief.trackingItems) || [];
+  list.innerHTML = items.map(t=>`
+    <div class="tracking-item">
+      <span>${escapeHtmlSafe(t.text)}</span>
+      <button class="rm" onclick="removeTrackingItem(${t.id})">×</button>
     </div>
   `).join('');
 }
-function escapeHtml(s){
+function escapeHtmlSafe(s){
   return String(s).replace(/[&<>"']/g, c=>({'&':'&amp;','<':'&lt;','>':'&gt;','"':'&quot;',"'":'&#39;'}[c]));
+}
+function handleVisualImages(files){
+  if(!files || !files.length) return;
+  if(!state.currentBelief) state.currentBelief = defaultCurrentBelief();
+  if(!state.currentBelief.visualImages) state.currentBelief.visualImages = [];
+  const readers = Array.from(files).map(f=>new Promise(res=>{
+    const r = new FileReader();
+    r.onload = ()=>res(r.result);
+    r.onerror = ()=>res(null);
+    r.readAsDataURL(f);
+  }));
+  Promise.all(readers).then(dataUrls=>{
+    dataUrls.filter(Boolean).forEach(src=>{
+      state.currentBelief.visualImages.push({ id: Date.now()+Math.random(), src });
+    });
+    saveState();
+    renderVisualGallery();
+    document.getElementById('visual-image-input').value = '';
+    toast('عکس اضافه شد ✨');
+  });
+}
+function removeVisualImage(id){
+  state.currentBelief.visualImages = (state.currentBelief.visualImages||[]).filter(i=>i.id!==id);
+  saveState();
+  renderVisualGallery();
+}
+function renderVisualGallery(){
+  const gallery = document.getElementById('visual-gallery');
+  const imgs = (state.currentBelief && state.currentBelief.visualImages) || [];
+  gallery.innerHTML = imgs.map(i=>`
+    <div class="vg-item">
+      <img src="${i.src}" alt="">
+      <button class="vg-rm" onclick="removeVisualImage(${i.id})">×</button>
+    </div>
+  `).join('');
+}
+function toggleTracking(){
+  if(!state.currentBelief) state.currentBelief = defaultCurrentBelief();
+  state.currentBelief.trackingActive = !state.currentBelief.trackingActive;
+  saveState();
+  renderTrackingState();
+  toast(state.currentBelief.trackingActive ? 'ردیابی فعال شد 📡' : 'ردیابی متوقف شد');
+}
+function renderTrackingState(){
+  const active = !!(state.currentBelief && state.currentBelief.trackingActive);
+  const btn = document.getElementById('ras-activate-btn');
+  const radar = document.getElementById('ras-radar');
+  btn.textContent = active ? 'ردیابی فعاله ✓' : 'فعال کردن ردیابی';
+  btn.classList.toggle('active', active);
+  radar.classList.toggle('spin', active);
+}
+function todayEvidenceKey(){ return todayKey(); }
+function addEvidence(){
+  const noteEl = document.getElementById('b-evidence-note');
+  const note = noteEl.value.trim();
+  if(!state.evidenceLog) state.evidenceLog = [];
+  state.evidenceLog.push({ id: Date.now()+Math.random(), date: todayEvidenceKey(), note });
+  saveState();
+  noteEl.value = '';
+  renderEvidence();
+  toast('مورد جدید ثبت شد 🔎');
+}
+function renderEvidence(){
+  const count = (state.evidenceLog||[]).filter(e=>e.date===todayEvidenceKey()).length;
+  document.getElementById('ev-count').textContent = count.toLocaleString('fa-IR');
 }
 
 /* ---------------- practice streak ---------------- */
@@ -4317,7 +4488,20 @@ function renderStreak(){
   document.getElementById('b-streak').textContent = computeStreak().toLocaleString('fa-IR');
 }
 function renderBeliefsView(){
-  renderBeliefList();
+  if(!state.currentBelief) state.currentBelief = defaultCurrentBelief();
+  const cb = state.currentBelief;
+  document.getElementById('b-old').value = cb.oldText || '';
+  document.getElementById('b-old-intensity').value = cb.oldIntensity;
+  document.getElementById('b-old-intensity-val').textContent = Number(cb.oldIntensity).toLocaleString('fa-IR');
+  document.getElementById('b-new').value = cb.newText || '';
+  document.getElementById('b-new-intensity').value = cb.newIntensity;
+  document.getElementById('b-new-intensity-val').textContent = Number(cb.newIntensity).toLocaleString('fa-IR');
+  document.getElementById('b-attention-lever').value = cb.attentionLever;
+  document.getElementById('b-visual-note').value = cb.visualNote || '';
+  renderVisualGallery();
+  renderTrackingList();
+  renderTrackingState();
+  renderEvidence();
   renderStreak();
   const sw = document.getElementById('alarm-switch');
   sw.classList.toggle('on', !!state.alarmEnabled);
