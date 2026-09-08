@@ -1338,13 +1338,34 @@
 }
 #grat-root .ras-activate-btn.active{background:var(--emerald-900);}
 #grat-root .ras-radar{
-  flex:none; width:36px; height:36px; border-radius:50%;
-  background:radial-gradient(circle, var(--emerald-300) 0%, transparent 70%);
-  display:flex; align-items:center; justify-content:center; font-size:17px;
-  opacity:.4; transition:opacity .3s;
+  flex:none; width:44px; height:44px; border-radius:50%;
+  position:relative; overflow:hidden;
+  background:
+    repeating-radial-gradient(circle, rgba(80,255,150,0.28) 0, rgba(80,255,150,0.28) 1px, transparent 1.5px, transparent 7px),
+    radial-gradient(circle, #07180f 0%, #04120a 65%, #020a06 100%);
+  border:1px solid rgba(90,255,150,0.35);
+  box-shadow:inset 0 0 8px rgba(0,0,0,.6);
+  transition:border-color .3s;
 }
-#grat-root .ras-radar.spin{opacity:1; animation:ras-spin 1.6s linear infinite;}
+#grat-root .ras-radar::before{
+  content:''; position:absolute; inset:0; border-radius:50%;
+  background:conic-gradient(from 0deg, rgba(120,255,170,0.95), rgba(120,255,170,0.15) 22%, transparent 45%);
+  opacity:0; transition:opacity .3s;
+}
+#grat-root .ras-radar.spin{border-color:rgba(120,255,170,0.7);}
+#grat-root .ras-radar.spin::before{opacity:1; animation:ras-spin 4.5s linear infinite;}
 @keyframes ras-spin{ from{transform:rotate(0deg);} to{transform:rotate(360deg);} }
+#grat-root .radar-blip{
+  position:absolute; width:4px; height:4px; border-radius:50%; opacity:0;
+}
+#grat-root .radar-blip.green{background:#7cffa0; box-shadow:0 0 5px 1px rgba(124,255,160,.8);}
+#grat-root .radar-blip.red{background:#ff5b4d; box-shadow:0 0 5px 1px rgba(255,91,77,.85);}
+#grat-root .ras-radar.spin .radar-blip{animation:blip-fade 3.6s ease-in-out infinite;}
+@keyframes blip-fade{
+  0%,100%{opacity:0;}
+  20%,45%{opacity:1;}
+  65%{opacity:0;}
+}
 #grat-root .evidence-counter{display:flex; align-items:center; justify-content:space-between; gap:12px;}
 #grat-root .evidence-counter .ev-num{font-size:26px; font-weight:800; color:var(--emerald-700);}
 #grat-root .evidence-counter .ev-label{font-size:11.5px; color:var(--muted);}
@@ -3590,7 +3611,12 @@
       <div class="tracking-list" id="tracking-list"></div>
       <div class="ras-btn-row">
         <button class="ras-activate-btn" id="ras-activate-btn" onclick="toggleTracking()">فعال کردن ردیابی</button>
-        <div class="ras-radar" id="ras-radar">📡</div>
+        <div class="ras-radar" id="ras-radar">
+          <span class="radar-blip green" style="top:22%;left:32%; animation-delay:0s;"></span>
+          <span class="radar-blip red" style="top:58%;left:70%; animation-delay:1.1s;"></span>
+          <span class="radar-blip green" style="top:72%;left:24%; animation-delay:2.1s;"></span>
+          <span class="radar-blip green" style="top:32%;left:75%; animation-delay:2.9s;"></span>
+        </div>
       </div>
     </div>
 
