@@ -1697,6 +1697,7 @@
     </label>
     <button class="btn full panel-cal-btn" style="margin-top:10px;">📅 تقویم پیشرفت این شاخه</button>
     <button class="btn full gold" id="panel-action-add-sub" style="margin-top:10px;">＋ زیرشاخه</button>
+    <div id="panel-action-children-list" style="margin-top:8px;"></div>
   </div>
 
   <div id="panel-danger">
@@ -3089,6 +3090,7 @@
   const panelActionWeightVal = document.getElementById('panel-action-weight-val');
   const panelDeleteBtn = document.getElementById('panel-delete-btn');
   const actionsListEl = document.getElementById('panel-actions-list');
+  const panelActionChildrenListEl = document.getElementById('panel-action-children-list');
 
   const panelImageInput = document.getElementById('panel-image-input');
   const panelImageContainer = document.getElementById('panel-image-preview-container');
@@ -3181,6 +3183,7 @@
     document.getElementById('panel-action-routine').checked = !!action.isRoutine;
     panelDeleteBtn.classList.remove('hidden');
     panelDeleteBtn.textContent = 'حذف شاخه';
+    refreshActionChildrenPanel();
     panel.classList.add('open');
   }
 
@@ -3340,6 +3343,104 @@
     }, 30);
   }
 
+  function focusNewFieldIn(containerEl, id){
+    setTimeout(()=>{
+      const inp = containerEl.querySelector(`.a-text[data-aid="${id}"]`);
+      if (inp) inp.focus();
+    }, 30);
+  }
+
+  function refreshActionChildrenPanel(){
+    if (!currentEditingAction) { panelActionChildrenListEl.innerHTML = ''; return; }
+    const g = state.goals.find(g=>g.id===currentEditingAction.goalId);
+    if (!g) return;
+    const found = findActionNode(g.actions, currentEditingAction.actionId);
+    if (!found) return;
+    const node = found.node;
+    node.children = node.children || [];
+    panelActionChildrenListEl.innerHTML = renderActionTree(node.children, 0, node.color || g.color);
+    panelActionChildrenListEl.querySelectorAll('.img-upload input[type=file]').forEach(inp=>{
+      inp.addEventListener('change', (e)=>{
+        const files = e.target.files;
+        if (!files.length) return;
+        const aid = inp.dataset.aid;
+        const f2 = findActionNode(g.actions, aid);
+        if (!f2) return;
+        if (!Array.isArray(f2.node.images)) f2.node.images = [];
+        let loaded = 0;
+        for (let file of files) {
+          const reader = new FileReader();
+          reader.onload = (ev)=>{
+            f2.node.images.push({ src: ev.target.result, size: DEFAULT_IMG_SIZE });
+            loaded++;
+            if (loaded === files.length) {
+              refreshActionChildrenPanel();
+              render();
+            }
+          };
+          reader.readAsDataURL(file);
+        }
+        inp.value = '';
+      });
+    });
+    panelActionChildrenListEl.querySelectorAll('.img-remove').forEach(btn=>{
+      btn.addEventListener('click', (e)=>{
+        const aid = btn.dataset.aid;
+        const f2 = findActionNode(g.actions, aid);
+        if (!f2) return;
+        f2.node.images = [];
+        refreshActionChildrenPanel();
+        render();
+      });
+    });
+  }
+
+  panelActionChildrenListEl.addEventListener('click', (e)=>{
+    if (!currentEditingAction) return;
+    const g = state.goals.find(g=>g.id===currentEditingAction.goalId);
+    if (!g) return;
+    const delBtn = e.target.closest('.adel');
+    const addSubBtn = e.target.closest('.add-sub');
+    if (delBtn){
+      const found = findActionNode(g.actions, delBtn.dataset.aid);
+      if (found) found.list.splice(found.list.indexOf(found.node), 1);
+      refreshActionChildrenPanel();
+      render();
+    } else if (addSubBtn){
+      const found = findActionNode(g.actions, addSubBtn.dataset.aid);
+      if (found){
+        found.node.children = found.node.children || [];
+        const child = { id:uid(), text:'', weight:5, color:null, children:[], detached:false, images:[], radius:10, createdAt: Date.now() };
+        found.node.children.push(child);
+        refreshActionChildrenPanel();
+        render();
+        focusNewFieldIn(panelActionChildrenListEl, child.id);
+      }
+    }
+  });
+
+  panelActionChildrenListEl.addEventListener('input', (e)=>{
+    if (!currentEditingAction) return;
+    const g = state.goals.find(g=>g.id===currentEditingAction.goalId);
+    if (!g) return;
+    const t = e.target;
+    if (t.classList.contains('a-text')){
+      const found = findActionNode(g.actions, t.dataset.aid);
+      if (found){ found.node.text = t.value; render(); }
+    } else if (t.classList.contains('a-weight')){
+      const found = findActionNode(g.actions, t.dataset.aid);
+      if (found){
+        found.node.weight = +t.value;
+        const span = panelActionChildrenListEl.querySelector(`.aw-val[data-aid="${t.dataset.aid}"]`);
+        if (span) span.textContent = toFa(t.value);
+        render();
+      }
+    } else if (t.classList.contains('a-color')){
+      const found = findActionNode(g.actions, t.dataset.aid);
+      if (found){ found.node.color = t.value; render(); }
+    }
+  });
+
   document.getElementById('add-branch-btn').addEventListener('click', ()=>{
     const g = state.goals.find(g=>g.id===currentPanelGoalId);
     if (!g) return;
@@ -3398,6 +3499,7 @@
     panel.classList.remove('open');
     document.getElementById('panel-note-wrap').classList.remove('hidden');
     panelActionOnly.classList.add('hidden');
+    panelActionChildrenListEl.innerHTML = '';
   });
 
   panelActionWeight.addEventListener('input', ()=>{
@@ -3410,17 +3512,12 @@
     if (!g) return;
     const found = findActionNode(g.actions, currentEditingAction.actionId);
     if (!found) return;
-    // ذخیره‌ی تغییرات فعلی قبل از افزودن زیرشاخه
-    found.node.text = panelActionText.value.trim() || 'بدون عنوان';
-    found.node.color = panelActionColor.value;
-    found.node.weight = +panelActionWeight.value;
-    found.node.images = currentImages.slice();
-    found.node.isRoutine = document.getElementById('panel-action-routine').checked;
     found.node.children = found.node.children || [];
     const child = { id:uid(), text:'', weight:5, color:null, children:[], detached:false, images:[], radius:10, createdAt: Date.now() };
     found.node.children.push(child);
+    refreshActionChildrenPanel();
     render();
-    openPanelForAction(currentEditingAction.goalId, child.id);
+    focusNewFieldIn(panelActionChildrenListEl, child.id);
   });
 
   document.getElementById('panel-save-btn').addEventListener('click', ()=>{
