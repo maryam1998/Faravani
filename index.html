@@ -1640,12 +1640,14 @@
     <button id="panel-close">✕</button>
   </div>
 
-  <label class="small">اسم</label>
-  <input type="text" id="panel-name">
+  <div id="panel-name-color-wrap">
+    <label class="small">اسم</label>
+    <input type="text" id="panel-name">
 
-  <label class="small">رنگ فرکانس</label>
-  <div class="color-row" style="margin-bottom:12px;">
-    <input type="color" id="panel-color">
+    <label class="small">رنگ فرکانس</label>
+    <div class="color-row" style="margin-bottom:12px;">
+      <input type="color" id="panel-color">
+    </div>
   </div>
 
   <div id="panel-note-wrap">
@@ -3078,6 +3080,7 @@
   const panelDot = document.getElementById('panel-dot');
   const panelName = document.getElementById('panel-name');
   const panelColor = document.getElementById('panel-color');
+  const panelNameColorWrap = document.getElementById('panel-name-color-wrap');
   const panelNote = document.getElementById('panel-note');
   const panelGoalOnly = document.getElementById('panel-goal-only');
   const panelRingOnly = document.getElementById('panel-ring-only');
@@ -3173,6 +3176,7 @@
     updateImagePreviews(action.images || []);
     document.getElementById('panel-note-wrap').classList.add('hidden');
     document.getElementById('panel-image-wrap').style.display = 'flex';
+    panelNameColorWrap.classList.add('hidden');
     panelGoalOnly.classList.add('hidden');
     panelRingOnly.classList.add('hidden');
     panelActionOnly.classList.remove('hidden');
@@ -3197,6 +3201,7 @@
     panelColor.value = state.me.color;
     panelNote.value = state.me.note||'';
     updateImagePreviews(state.me.images || []);
+    panelNameColorWrap.classList.remove('hidden');
     panelGoalOnly.classList.add('hidden');
     panelRingOnly.classList.add('hidden');
     panelActionOnly.classList.add('hidden');
@@ -3220,6 +3225,7 @@
     updateImagePreviews(g.images || []);
     document.getElementById('panel-note-wrap').classList.add('hidden');
     document.getElementById('panel-image-wrap').style.display = 'flex';
+    panelNameColorWrap.classList.remove('hidden');
     panelGoalOnly.classList.remove('hidden');
     panelRingOnly.classList.add('hidden');
     panelActionOnly.classList.add('hidden');
@@ -3246,6 +3252,7 @@
     updateImagePreviews(r.images || []);
     document.getElementById('panel-note-wrap').classList.add('hidden');
     document.getElementById('panel-image-wrap').style.display = 'flex';
+    panelNameColorWrap.classList.remove('hidden');
     panelGoalOnly.classList.add('hidden');
     panelRingOnly.classList.remove('hidden');
     panelActionOnly.classList.add('hidden');
