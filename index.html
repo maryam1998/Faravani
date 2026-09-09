@@ -7,8 +7,8 @@
 <script>
   // ⚠️ این دو مقدار رو از پروژه‌ی Supabase خودت بردار (Project Settings → API → Project URL / anon public key)
   // تا وقتی این‌ها رو با مقادیر واقعی عوض نکنی، تب «دوستان هم‌فرکانسی» غیرفعال می‌مونه و به کاربر خطا نشون داده میشه.
-  window.SUPABASE_URL = 'https://YOUR-PROJECT-REF.supabase.co';
-  window.SUPABASE_ANON_KEY = 'YOUR-ANON-PUBLIC-KEY';
+  window.SUPABASE_URL = 'mfyqdiksarsiooqjnhja';
+  window.SUPABASE_ANON_KEY = 'eyJhbGciOiJIUzI1NiIsInR5cCI6IkpXVCJ9.eyJpc3MiOiJzdXBhYmFzZSIsInJlZiI6Im1meXFkaWtzYXJzaW9vcWpuaGphIiwicm9sZSI6ImFub24iLCJpYXQiOjE3ODg5NDU5NTksImV4cCI6MjEwNDUyMTk1OX0.TCrfbktpxhNy-MAnxgYL32x4IKf9h-S-kP0YQkMkW2Y';
   window.supabaseClient = null;
   try{
     if (window.supabase && window.SUPABASE_URL.indexOf('YOUR-PROJECT-REF') === -1 && window.SUPABASE_ANON_KEY.indexOf('YOUR-ANON-PUBLIC-KEY') === -1) {
