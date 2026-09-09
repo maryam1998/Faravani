@@ -2,7 +2,14 @@
 <html dir="rtl" lang="fa">
 <head>
 <meta charset="UTF-8">
-<script>try{document.documentElement.setAttribute('data-theme', localStorage.getItem('appTheme')||'dark');}catch(e){}</script>
+<script>try{document.documentElement.setAttribute('data-theme', localStorage.getItem('appTheme')||'light');}catch(e){}</script>
+<script>try{
+  var _ap = JSON.parse(localStorage.getItem('appAppearance')||'null');
+  if(_ap){
+    if(_ap.textColor) document.documentElement.style.setProperty('--ink', _ap.textColor);
+    if(_ap.fontSize) document.documentElement.style.setProperty('--app-font-scale', (_ap.fontSize/14));
+  }
+}catch(e){}</script>
 <meta name="viewport" content="width=device-width, initial-scale=1.0, maximum-scale=1.0, user-scalable=no">
 <title>نقشه‌ی فرکانس</title>
 <link rel="manifest" href="manifest.json">
@@ -584,6 +591,7 @@
   }
 #grat-root *{box-sizing:border-box; -webkit-tap-highlight-color:transparent;}
 #grat-root, #grat-root{margin:0; padding:0;}
+#grat-root{zoom:var(--app-font-scale, 1);}
 #grat-root{
     position:fixed;top:0;left:0;right:0;bottom:64px;
     overflow-y:auto;-webkit-overflow-scrolling:touch;
@@ -2987,6 +2995,12 @@
     state.showDateStamps = !!settingsShowDates.checked;
     settingsOverlay.classList.add('hidden');
     render();
+    // اعمال همین رنگ و اندازه‌فونت به کل اپ (از جمله صفحه‌ی بانک فراوانی)، نه فقط نقشه
+    try{
+      document.documentElement.style.setProperty('--ink', state.textColor);
+      document.documentElement.style.setProperty('--app-font-scale', (state.fontSize/14));
+      localStorage.setItem('appAppearance', JSON.stringify({textColor: state.textColor, fontSize: state.fontSize}));
+    }catch(e){}
   });
 
   const helpOverlay = document.getElementById('help-modal-overlay');
@@ -3579,6 +3593,32 @@
     return null;
   }
 
+  // یه شاخه/زیرشاخه واقعی رو با متنِ همون روزِ ثبت‌شده در تقویم هماهنگ نگه می‌داره،
+  // تا لازم نباشه یک بار توی تقویم و یک بار به‌صورت جدا توی شاخه‌ها تایپ کنی.
+  function syncCalLogToBranch(node, key, txt){
+    if (!calTarget) return;
+    const parentList = calTarget.type === 'goal' ? node.actions
+      : (Array.isArray(node.children) ? node.children : (node.children = []));
+    if (!node.logBranchIds || typeof node.logBranchIds !== 'object') node.logBranchIds = {};
+    const existingId = node.logBranchIds[key];
+    const found = existingId ? findActionNode(parentList, existingId) : null;
+
+    if (!txt){
+      if (found) found.list.splice(found.list.indexOf(found.node), 1);
+      delete node.logBranchIds[key];
+      return;
+    }
+    if (found){
+      found.node.text = txt;
+      return;
+    }
+    const [jy,jm,jd] = key.split('-').map(Number);
+    const g = toGregorianCal(jy,jm,jd);
+    const a = { id:uid(), text:txt, weight:5, color:null, children:[], detached:false, images:[], radius:12, createdAt: new Date(g.gy, g.gm-1, g.gd).getTime() };
+    parentList.push(a);
+    node.logBranchIds[key] = a.id;
+  }
+
   function openCalendarForTarget(target){
     calTarget = target;
     const node = getCalNode();
@@ -3647,8 +3687,12 @@
       document.getElementById('cal-day-save-btn').addEventListener('click', ()=>{
         const txt = document.getElementById('cal-day-note').value.trim();
         if (txt) node.logs[key] = txt; else delete node.logs[key];
+        syncCalLogToBranch(node, key, txt);
         scheduleMapSave();
+        render();
         renderCalBody();
+        const gForRefresh = state.goals.find(g=>g.id===currentPanelGoalId);
+        if (gForRefresh) refreshActionsPanel(gForRefresh);
       });
     } else if (calView === 'month'){
       navLabel.textContent = JALALI_MONTHS[calCursor.jm-1]+' '+toFa(calCursor.jy);
@@ -5245,10 +5289,10 @@ updateCartBadge();
     applyIcon(theme);
   };
   window.toggleAppTheme = function(){
-    var current = document.documentElement.getAttribute('data-theme') || 'dark';
+    var current = document.documentElement.getAttribute('data-theme') || 'light';
     window.setAppTheme(current === 'dark' ? 'light' : 'dark');
   };
-  applyIcon(document.documentElement.getAttribute('data-theme') || 'dark');
+  applyIcon(document.documentElement.getAttribute('data-theme') || 'light');
 })();
 </script>
 <script>
