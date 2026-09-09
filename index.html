@@ -1285,6 +1285,18 @@
     background:var(--gold-500); color:#fff; cursor:pointer;
   }
 #grat-root .today-btn2[data-done="true"]{background:rgba(255,255,255,.25);}
+#grat-root .streak-history{margin:14px 18px 0;}
+#grat-root .streak-history .sh-item{
+  background:var(--surface); border:1px solid var(--line); border-radius:14px;
+  padding:12px 14px; margin-bottom:10px;
+}
+#grat-root .streak-history .sh-time{font-size:11px; color:var(--muted); margin-bottom:8px; font-weight:700;}
+#grat-root .streak-history .sh-row{font-size:12px; line-height:1.9; margin-bottom:4px;}
+#grat-root .streak-history .sh-row b{font-weight:800;}
+#grat-root .streak-history .sh-old{color:#b3452f;}
+#grat-root .streak-history .sh-new{color:var(--emerald-700);}
+#grat-root .streak-history .sh-tracking{color:var(--ink-soft);}
+#grat-root .streak-history .sh-empty{font-size:12px; color:var(--muted); text-align:center; padding:8px 0;}
 #grat-root ::selection{background:var(--gold-300);}
 
 /* ---------- belief & attention flow ---------- */
@@ -3657,6 +3669,7 @@
       </div>
       <button class="today-btn2" id="today-btn2" onclick="toggleToday()">✨ انجام دادم</button>
     </div>
+    <div class="streak-history" id="streak-history"></div>
   </section>
 
   <!-- toast -->
@@ -3807,6 +3820,7 @@ function loadState(){
       if(!s.currentBelief.trackingItems) s.currentBelief.trackingItems = [];
       if(!s.currentBelief.visualImages) s.currentBelief.visualImages = [];
       if(!s.evidenceLog) s.evidenceLog = [];
+      if(!s.streakHistory) s.streakHistory = [];
       if(!s.practiceLog) s.practiceLog = [];
       if(!s.loginId) s.loginId = 'local-guest';
       if(typeof s.alarmEnabled !== 'boolean') s.alarmEnabled = false;
@@ -3819,7 +3833,7 @@ function loadState(){
       return s;
     }
   }catch(e){}
-  return { name:'', currency:'', startDate:'', history:[], gratitude:[], beliefs:[], currentBelief:defaultCurrentBelief(), evidenceLog:[], practiceLog:[], loginId:'local-guest', alarmEnabled:false, alarmTime:'20:00',
+  return { name:'', currency:'', startDate:'', history:[], gratitude:[], beliefs:[], currentBelief:defaultCurrentBelief(), evidenceLog:[], streakHistory:[], practiceLog:[], loginId:'local-guest', alarmEnabled:false, alarmTime:'20:00',
     bankName:'بانک فراوانی', cardNumber:'5859 8312 8347 6690', cardExpiry:'∞ / ∞', cardCVV:'۱۴۰', cardTheme:'emerald' };
 }
 function defaultCurrentBelief(){
@@ -4492,12 +4506,26 @@ function toggleToday(){
   const t = todayKey();
   if(state.practiceLog.includes(t)){
     state.practiceLog = state.practiceLog.filter(d=>d!==t);
+    state.streakHistory = (state.streakHistory||[]).filter(h=>h.dateKey!==t);
   }else{
     state.practiceLog.push(t);
+    if(!state.streakHistory) state.streakHistory = [];
+    const cb = state.currentBelief || defaultCurrentBelief();
+    const now = new Date();
+    state.streakHistory.push({
+      id: Date.now()+Math.random(),
+      dateKey: t,
+      dateLabel: now.toLocaleDateString('fa-IR'),
+      timeLabel: now.toLocaleTimeString('fa-IR', { hour:'2-digit', minute:'2-digit' }),
+      oldText: cb.oldText || '',
+      newText: cb.newText || '',
+      trackingItems: (cb.trackingItems||[]).map(it=>it.text)
+    });
     toast('امروز ثبت شد 🔥');
   }
   saveState();
   renderStreak();
+  renderStreakHistory();
 }
 function computeStreak(){
   const set = new Set(state.practiceLog);
@@ -4511,8 +4539,21 @@ function renderStreak(){
   const done = state.practiceLog.includes(todayKey());
   const btn = document.getElementById('today-btn2');
   btn.setAttribute('data-done', done?'true':'false');
-  btn.textContent = done ? 'امروز ثبت شد ✓' : 'امروز تمرین کردم';
+  btn.textContent = done ? 'امروز ثبت شد ✓' : '✨ انجام دادم';
   document.getElementById('b-streak').textContent = computeStreak().toLocaleString('fa-IR');
+}
+function renderStreakHistory(){
+  const wrap = document.getElementById('streak-history');
+  const items = [...(state.streakHistory||[])].reverse();
+  if(items.length===0){ wrap.innerHTML = '<div class="sh-empty">هنوز روزی ثبت نشده.</div>'; return; }
+  wrap.innerHTML = items.map(h=>`
+    <div class="sh-item">
+      <div class="sh-time">${escapeHtmlSafe(h.dateLabel)} — ${escapeHtmlSafe(h.timeLabel)}</div>
+      ${h.oldText ? `<div class="sh-row sh-old"><b>ذهنیت قدیمی:</b> ${escapeHtmlSafe(h.oldText)}</div>` : ''}
+      ${h.newText ? `<div class="sh-row sh-new"><b>ذهنیت جدید:</b> ${escapeHtmlSafe(h.newText)}</div>` : ''}
+      ${h.trackingItems && h.trackingItems.length ? `<div class="sh-row sh-tracking"><b>ردیابی:</b> ${h.trackingItems.map(escapeHtmlSafe).join('، ')}</div>` : ''}
+    </div>
+  `).join('');
 }
 function renderBeliefsView(){
   if(!state.currentBelief) state.currentBelief = defaultCurrentBelief();
@@ -4530,6 +4571,7 @@ function renderBeliefsView(){
   renderTrackingState();
   renderEvidence();
   renderStreak();
+  renderStreakHistory();
   const sw = document.getElementById('alarm-switch');
   sw.classList.toggle('on', !!state.alarmEnabled);
   document.getElementById('alarm-time').value = state.alarmTime;
