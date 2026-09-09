@@ -7,8 +7,8 @@
 <script>
   // ⚠️ این دو مقدار رو از پروژه‌ی Supabase خودت بردار (Project Settings → API → Project URL / anon public key)
   // تا وقتی این‌ها رو با مقادیر واقعی عوض نکنی، تب «دوستان هم‌فرکانسی» غیرفعال می‌مونه و به کاربر خطا نشون داده میشه.
-  window.SUPABASE_URL = 'https://mfyqdiksarsiooqjnhja.supabase.co';
-  window.SUPABASE_ANON_KEY = 'eyJhbGciOiJIUzI1NiIsInR5cCI6IkpXVCJ9.eyJpc3MiOiJzdXBhYmFzZSIsInJlZiI6Im1meXFkaWtzYXJzaW9vcWpuaGphIiwicm9sZSI6ImFub24iLCJpYXQiOjE3ODg5NDU5NTksImV4cCI6MjEwNDUyMTk1OX0.TCrfbktpxhNy-MAnxgYL32x4IKf9h-S-kP0YQkMkW2Y';
+  window.SUPABASE_URL = 'https://YOUR-PROJECT-REF.supabase.co';
+  window.SUPABASE_ANON_KEY = 'YOUR-ANON-PUBLIC-KEY';
   window.supabaseClient = null;
   try{
     if (window.supabase && window.SUPABASE_URL.indexOf('YOUR-PROJECT-REF') === -1 && window.SUPABASE_ANON_KEY.indexOf('YOUR-ANON-PUBLIC-KEY') === -1) {
@@ -3899,16 +3899,9 @@
 
       <button class="submit" id="pending-checkout-btn" onclick="addAllToCart()" disabled>افزودن به سبد خرید</button>
     </div>
-  </section>
 
-  <!-- ============ CART ============ -->
-  <section class="view" id="view-cart">
-    <div class="topbar bordered">
-      <button class="icon-btn" onclick="goto('store')">‹</button>
-      <div>
-        <h1>سبد خرید</h1>
-        <div class="sub">پیش از پرداخت بررسی کن</div>
-      </div>
+    <div class="section-label">
+      <h2>🧺 سبد خرید</h2>
     </div>
     <div id="cart-list" style="margin-top:8px;"></div>
     <div id="cart-empty" class="empty-hint" style="display:none;">
@@ -3924,7 +3917,7 @@
   <!-- ============ PAYMENT ============ -->
   <section class="view" id="view-pay">
     <div class="topbar bordered">
-      <button class="icon-btn" onclick="goto('cart')">‹</button>
+      <button class="icon-btn" onclick="goto('store')">‹</button>
       <div>
         <h1>درگاه پرداخت فراوانی</h1>
         <div class="sub">اتصال امن 🔒</div>
@@ -4041,15 +4034,6 @@
       <button class="icon-btn" onclick="goto('home')">‹</button>
       <div>
         <h1>دوستان هم‌فرکانسی</h1>
-        <div class="sub">شکرگذاری‌های بقیه رو ببین، یا اگه خواستی مال خودت رو هم به اشتراک بذار</div>
-      </div>
-    </div>
-
-    <div class="quick-add">
-      <div class="lbl">🌍 چطور شکرگذاری‌هام دیده میشه؟</div>
-      <div class="sub" style="font-size:11.5px;line-height:1.8;">
-        کنار هر شکرگذاری که می‌نویسی، یه تیک «🌍 برای دوستان هم نمایش داده بشه» هست. هر کدوم رو تیک بزنی همون‌جا میاد توی این فید. هر وقت خواستی هم می‌تونی از توی لیست شکرگذاری، اشتراک‌گذاری هر مورد رو خاموش/روشن کنی.<br>
-        قبل از نمایش عمومی، فحش و کلمات سیاسی به‌صورت خودکار فیلتر میشه (صد در صد نیست، پس خودت هم مراقب چیزی که می‌نویسی باش 🌱). اسمت هم برای بقیه نمایش داده میشه.
       </div>
     </div>
 
@@ -4269,9 +4253,8 @@
   <!-- bottom nav -->
   <nav class="bottom-nav">
     <button class="nav-btn active" data-nav="home" onclick="goto('home')"><span class="n-ic">🏠</span>خانه</button>
-    <button class="nav-btn" data-nav="store" onclick="goto('store')"><span class="n-ic">🛍️</span>فروشگاه</button>
-    <button class="nav-btn" data-nav="cart" onclick="goto('cart')">
-      <span class="n-ic" style="position:relative;">🧺<span class="nav-badge" id="nav-cart-badge" style="display:none;">۰</span></span>سبد خرید
+    <button class="nav-btn" data-nav="store" onclick="goto('store')">
+      <span class="n-ic" style="position:relative;">🛍️<span class="nav-badge" id="nav-cart-badge" style="display:none;">۰</span></span>فروشگاه
     </button>
     <button class="nav-btn" data-nav="history" onclick="goto('history')"><span class="n-ic">🙏</span>شکرگذاری</button>
     <button class="nav-btn" data-nav="beliefs" onclick="goto('beliefs')"><span class="n-ic">💭</span>باورها</button>
@@ -4619,8 +4602,7 @@ function goto(view){
   window.scrollTo(0,0);
   var __gr = document.getElementById('grat-root'); if (__gr) __gr.scrollTop = 0;
   if(view==='home') renderHome();
-  if(view==='store') renderPendingList();
-  if(view==='cart') renderCart();
+  if(view==='store'){ renderPendingList(); renderCart(); }
   if(view==='pay') renderPay();
   if(view==='history') renderHistory();
   if(view==='beliefs') renderBeliefsView();
@@ -4871,6 +4853,7 @@ function addAllToCart(){
   pendingItems = [];
   updateCartBadge();
   renderPendingList();
+  renderCart();
   toast('🛍️ '+count.toLocaleString('fa-IR')+' مورد به سبد خرید اضافه شد');
 }
 
@@ -4957,7 +4940,7 @@ function sendFakeOtp(){
   }, 900);
 }
 function processPayment(){
-  if(cart.length===0){ toast('سبد خریدت خالیه'); goto('cart'); return; }
+  if(cart.length===0){ toast('سبد خریدت خالیه'); goto('store'); return; }
   const overlay = document.getElementById('pay-overlay');
   overlay.classList.add('show');
   setTimeout(()=>{
