@@ -34,7 +34,7 @@ self.addEventListener('fetch', event => {
   if (isHTML) {
     // صفحه‌ی اصلی: همیشه اول از اینترنت بگیر تا آخرین نسخه نشون داده بشه
     event.respondWith(
-      fetch(req)
+      fetch(req, { cache: 'no-store' })
         .then(res => {
           const copy = res.clone();
           caches.open(CACHE_NAME).then(cache => cache.put(req, copy));
