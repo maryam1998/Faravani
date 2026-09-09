@@ -1,5 +1,5 @@
 // نسخهٔ کش — این خط رو دستی عوض نکن؛ گیت‌هاب اکشن خودش هر بار پوش می‌کنی این رو عوض می‌کنه
-const CACHE_VERSION = 'v1';
+const CACHE_VERSION = '4bbf842';
 const CACHE_NAME = 'faravani-cache-' + CACHE_VERSION;
 const PRECACHE_URLS = [
   './',
