@@ -887,6 +887,12 @@
 #grat-root .tx-item .mid .t2{font-size:11.5px; color:var(--muted); margin-top:2px;}
 #grat-root .tx-item .amt{font-size:13px; font-weight:800; color:var(--emerald-700); white-space:nowrap;}
 #grat-root .tx-item .badge-manual{font-size:10px; color:var(--emerald-700); background:#eaf5f2; border-radius:8px; padding:2px 7px; font-weight:700;}
+#grat-root .tx-item .share-toggle-btn{
+  flex-shrink:0; width:28px; height:28px; border-radius:50%; border:1px solid var(--line);
+  background:var(--surface-2); font-size:14px; cursor:pointer;
+  display:flex; align-items:center; justify-content:center; padding:0; margin-inline-start:4px;
+}
+#grat-root .tx-item .share-toggle-btn:active{background:var(--line);}
 #grat-root .empty-hint{
     margin:12px 18px; padding:22px 16px; text-align:center;
     background:var(--surface); border:1px dashed var(--line); border-radius:16px;
@@ -3846,6 +3852,10 @@
         <input id="home-grat-input" placeholder="مثلاً: سلامتی خانواده‌ام..." onkeydown="if(event.key==='Enter')addGratitudeHome()">
         <button onclick="addGratitudeHome()">افزودن</button>
       </div>
+      <label class="reached-toggle" style="margin-top:8px;margin-bottom:0;">
+        <input type="checkbox" id="home-grat-share">
+        <span>🌍 این یکی برای دوستان هم‌فرکانسی هم نمایش داده بشه</span>
+      </label>
     </div>
 
     <div class="section-label">
@@ -4007,6 +4017,10 @@
         <input id="grat-input" placeholder="مثلاً: سلامتی خانواده‌ام..." onkeydown="if(event.key==='Enter')addGratitude()">
         <button onclick="addGratitude()">افزودن</button>
       </div>
+      <label class="reached-toggle" style="margin-top:8px;margin-bottom:0;">
+        <input type="checkbox" id="grat-share">
+        <span>🌍 این یکی برای دوستان هم‌فرکانسی هم نمایش داده بشه</span>
+      </label>
     </div>
 
     <button class="btn full" style="margin:10px 0;" onclick="openBankCalendar('gratitude')">📅 تقویم شکرگذاری</button>
@@ -4032,11 +4046,9 @@
     </div>
 
     <div class="quick-add">
-      <label class="reached-toggle">
-        <input type="checkbox" id="friends-share-toggle" onchange="toggleShareGratitude(this.checked)">
-        <span>شکرگذاری‌های من هم برای دوستان هم‌فرکانسی نمایش داده بشه</span>
-      </label>
-      <div class="sub" style="margin-top:8px;font-size:11px;line-height:1.7;">
+      <div class="lbl">🌍 چطور شکرگذاری‌هام دیده میشه؟</div>
+      <div class="sub" style="font-size:11.5px;line-height:1.8;">
+        کنار هر شکرگذاری که می‌نویسی، یه تیک «🌍 برای دوستان هم نمایش داده بشه» هست. هر کدوم رو تیک بزنی همون‌جا میاد توی این فید. هر وقت خواستی هم می‌تونی از توی لیست شکرگذاری، اشتراک‌گذاری هر مورد رو خاموش/روشن کنی.<br>
         قبل از نمایش عمومی، فحش و کلمات سیاسی به‌صورت خودکار فیلتر میشه (صد در صد نیست، پس خودت هم مراقب چیزی که می‌نویسی باش 🌱). اسمت هم برای بقیه نمایش داده میشه.
       </div>
     </div>
@@ -4615,12 +4627,12 @@ function goto(view){
   if(view==='friends') renderFriends();
 }
 
-/* ---------------- دوستان هم‌فرکانسی (فید عمومی شکرگذاری) ---------------- */
+/* ---------------- دوستان هم‌فرکانسی (فید عمومی شکرگذاری، به تفکیک هر مورد) ---------------- */
 async function syncGratitudeShare(entry){
   try{
-    if(!state.shareGratitude) return;
+    if(!entry || !entry.shared) return;
     if(!window.supabaseClient) return;
-    const text = (entry && entry.text || '').trim();
+    const text = (entry.text || '').trim();
     if(!text || containsBannedContent(text)) return;
     await window.supabaseClient.from('public_gratitude').upsert({
       device_id: state.authUserId || state.loginId || 'local-guest',
@@ -4630,29 +4642,42 @@ async function syncGratitudeShare(entry){
     }, { onConflict: 'device_id,iso,text', ignoreDuplicates: true });
   }catch(e){ console.warn('gratitude share sync failed', e); }
 }
+async function unsyncGratitudeShare(entry){
+  try{
+    if(!window.supabaseClient || !entry) return;
+    await window.supabaseClient.from('public_gratitude').delete().match({
+      device_id: state.authUserId || state.loginId || 'local-guest',
+      iso: entry.iso || null,
+      text: (entry.text || '').trim().slice(0,300)
+    });
+  }catch(e){ console.warn('gratitude unshare failed', e); }
+}
 async function bulkSyncExistingGratitude(){
   if(!window.supabaseClient) return;
-  const manualEntries = (state.gratitude||[]).filter(g=>g.source==='manual');
-  for(const g of manualEntries){ await syncGratitudeShare(g); }
+  const sharedEntries = (state.gratitude||[]).filter(g=>g.shared);
+  for(const g of sharedEntries){ await syncGratitudeShare(g); }
 }
-function toggleShareGratitude(checked){
-  state.shareGratitude = checked;
+function toggleGratitudeShare(id){
+  const g = (state.gratitude||[]).find(x=>x.id===id);
+  if(!g) return;
+  g.shared = !g.shared;
   saveState();
-  if(checked){
+  if(g.shared){
     if(!window.supabaseClient){
       toast('این قابلیت هنوز فعال نشده 🌱');
+      g.shared = false; saveState();
       return;
     }
-    toast('شکرگذاری‌هات با دوستان هم‌فرکانسی به اشتراک گذاشته میشه 🌊');
-    bulkSyncExistingGratitude();
+    syncGratitudeShare(g);
+    toast('این شکرگذاری با دوستان هم‌فرکانسی به اشتراک گذاشته شد 🌊');
   } else {
-    toast('اشتراک‌گذاری خاموش شد');
+    unsyncGratitudeShare(g);
+    toast('اشتراک‌گذاری این مورد خاموش شد');
   }
+  renderHistory();
+  renderHome();
 }
 async function renderFriends(){
-  const toggle = document.getElementById('friends-share-toggle');
-  if(toggle) toggle.checked = !!state.shareGratitude;
-
   const noBackend = document.getElementById('friends-no-backend');
   const loading = document.getElementById('friends-loading');
   const list = document.getElementById('friends-feed');
@@ -4712,6 +4737,9 @@ function renderHome(){
   document.getElementById('home-day-tag').textContent = 'روز '+daysPassed().toLocaleString('fa-IR');
   renderThemeBanner();
 
+  const homeShareBox = document.getElementById('home-grat-share');
+  if(homeShareBox) homeShareBox.checked = !!state.shareGratitude;
+
   const wrap = document.getElementById('home-recent');
   wrap.innerHTML = '';
   const all = [...state.gratitude].reverse();
@@ -4734,26 +4762,31 @@ function renderHome(){
         <div class="t1">${g.text}</div>
         <div class="t2">${g.day} ${g.date} - ${g.time}</div>
       </div>
+      ${g.source==='manual' ? `<button class="share-toggle-btn" title="${g.shared ? 'برای دوستان قابل دیدنه — خاموش کردنش' : 'با دوستان به اشتراک بذار'}" onclick="event.stopPropagation();toggleGratitudeShare(${g.id})">${g.shared ? '🌍' : '🔒'}</button>` : ''}
       ${g.amount ? `<div class="amt">${formatMoney(g.amount)}</div>` : `<span class="badge-manual">شکرگذاری</span>`}`;
     wrap.appendChild(row);
   });
 }
 function addGratitudeHome(){
   const input = document.getElementById('home-grat-input');
+  const shareBox = document.getElementById('home-grat-share');
   const val = (input.value||'').trim();
   if(!val){ toast('یه چیزی بنویس 🌱'); return; }
+  const shared = !!(shareBox && shareBox.checked);
   const np = nowParts();
   const newEntry = {
     id: Date.now()+Math.random(),
     text: val, icon:'🙏', image:null, amount:null,
-    date: np.date, day: np.day, time: np.time, iso: np.iso, source:'manual'
+    date: np.date, day: np.day, time: np.time, iso: np.iso, source:'manual',
+    shared: shared
   };
   state.gratitude.push(newEntry);
+  state.shareGratitude = shared;
   saveState();
   input.value='';
   renderHome();
-  toast('به لیست شکرگذاری اضافه شد 🙏');
-  syncGratitudeShare(newEntry);
+  toast(shared ? 'به لیست شکرگذاری اضافه و با دوستان به اشتراک گذاشته شد 🙏🌍' : 'به لیست شکرگذاری اضافه شد 🙏');
+  if(shared) syncGratitudeShare(newEntry);
 }
 
 /* --- custom item with image --- */
@@ -4984,23 +5017,30 @@ function showReceipt(r){
 /* ---------------- gratitude list ---------------- */
 function addGratitude(){
   const input = document.getElementById('grat-input');
+  const shareBox = document.getElementById('grat-share');
   const val = (input.value||'').trim();
   if(!val){ toast('یه چیزی بنویس 🌱'); return; }
+  const shared = !!(shareBox && shareBox.checked);
   const np = nowParts();
   const newEntry = {
     id: Date.now()+Math.random(),
     text: val, icon:'🙏', image:null, amount:null,
-    date: np.date, day: np.day, time: np.time, iso: np.iso, source:'manual'
+    date: np.date, day: np.day, time: np.time, iso: np.iso, source:'manual',
+    shared: shared
   };
   state.gratitude.push(newEntry);
+  state.shareGratitude = shared;
   saveState();
   input.value='';
   renderHistory();
-  toast('به لیست شکرگذاری اضافه شد 🙏');
-  syncGratitudeShare(newEntry);
+  toast(shared ? 'به لیست شکرگذاری اضافه و با دوستان به اشتراک گذاشته شد 🙏🌍' : 'به لیست شکرگذاری اضافه شد 🙏');
+  if(shared) syncGratitudeShare(newEntry);
 }
 function renderHistory(){
   if(ensureSetup()) return;
+  const shareBox = document.getElementById('grat-share');
+  if(shareBox) shareBox.checked = !!state.shareGratitude;
+
   const list = document.getElementById('history-list');
   const empty = document.getElementById('history-empty');
   list.innerHTML = '';
@@ -5025,6 +5065,7 @@ function renderHistory(){
         <div class="t1">${g.text}</div>
         <div class="t2">${g.day} ${g.date} - ${g.time}</div>
       </div>
+      ${g.source==='manual' ? `<button class="share-toggle-btn" title="${g.shared ? 'برای دوستان قابل دیدنه — خاموش کردنش' : 'با دوستان به اشتراک بذار'}" onclick="event.stopPropagation();toggleGratitudeShare(${g.id})">${g.shared ? '🌍' : '🔒'}</button>` : ''}
       ${g.amount ? `<div class="amt">${formatMoney(g.amount)}</div>` : `<span class="badge-manual">شکرگذاری</span>`}`;
     list.appendChild(row);
   });
