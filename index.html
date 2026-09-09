@@ -1620,6 +1620,10 @@
     <label class="small">قطر شاخه</label>
     <input type="range" id="panel-action-weight" min="1" max="10" value="5">
     <span id="panel-action-weight-val">۵</span>
+    <label class="small" style="margin-top:10px;display:flex;align-items:center;gap:8px;cursor:pointer;">
+      <input type="checkbox" id="panel-action-routine" style="width:16px;height:16px;">
+      <span>این یه کار روتینه که باید مرتب انجامش بدم</span>
+    </label>
     <button class="btn full panel-cal-btn" style="margin-top:10px;">📅 تقویم پیشرفت این شاخه</button>
   </div>
 
@@ -1697,6 +1701,7 @@
       if (typeof a.labelDY !== 'number') a.labelDY = 0;
       if (typeof a.labelSize !== 'number') a.labelSize = null;
       if (!a.logs || typeof a.logs !== 'object') a.logs = {};
+      if (typeof a.isRoutine !== 'boolean') a.isRoutine = false;
       if (typeof a.detached !== 'boolean') a.detached = false;
       if (a.detached) {
         if (typeof a.originX !== 'number') a.originX = 0;
@@ -1879,6 +1884,18 @@
     if (calIcon){
       e.preventDefault();
       openCalendarForGoalId(calIcon.dataset.calGoal);
+      return;
+    }
+    const routineToggle = e.target.closest('[data-routine-toggle]');
+    if (routineToggle){
+      e.preventDefault();
+      toggleRoutineLog(routineToggle.dataset.routineToggle, todayCalKey());
+      return;
+    }
+    const routineCell = e.target.closest('[data-routine-cell]');
+    if (routineCell){
+      e.preventDefault();
+      toggleRoutineLog(routineCell.dataset.routineCell, routineCell.dataset.key);
       return;
     }
     svg.setPointerCapture(e.pointerId);
@@ -2800,6 +2817,12 @@
     text += `</text>`;
     out += text;
 
+    if (action.isRoutine){
+      const totalTspanCount = lines.length + (stamp ? 1 : 0);
+      const routineY = labelYBase + 16*(totalTspanCount) + 8;
+      out += routineWidgetSVG(action, labelX, routineY, anchor, color);
+    }
+
     return out;
   }
 
@@ -3077,6 +3100,7 @@
     panelActionColor.value = action.color || g.color;
     panelActionWeight.value = action.weight || 5;
     panelActionWeightVal.textContent = toFa(action.weight || 5);
+    document.getElementById('panel-action-routine').checked = !!action.isRoutine;
     panelDeleteBtn.classList.remove('hidden');
     panelDeleteBtn.textContent = 'حذف شاخه';
     panel.classList.add('open');
@@ -3339,6 +3363,7 @@
           found.node.color = panelActionColor.value;
           found.node.weight = +panelActionWeight.value;
           found.node.images = images;
+          found.node.isRoutine = document.getElementById('panel-action-routine').checked;
         }
       }
     }
@@ -3470,6 +3495,72 @@
     return (dow+1)%7; // shift so شنبه(Sat)=0 .. جمعه(Fri)=6
   }
   function calDKey(jy,jm,jd){ return jy+'-'+jm+'-'+jd; }
+
+  function jalaaliCurrentWeekDates(){
+    const now = new Date();
+    const todayJ = toJalaali(now.getFullYear(), now.getMonth()+1, now.getDate());
+    const todayWd = jalaaliWeekDay(todayJ.jy, todayJ.jm, todayJ.jd); // 0=شنبه..6=جمعه
+    const g0 = toGregorianCal(todayJ.jy, todayJ.jm, todayJ.jd);
+    const startDate = new Date(g0.gy, g0.gm-1, g0.gd);
+    startDate.setDate(startDate.getDate() - todayWd);
+    const days = [];
+    for (let i=0;i<7;i++){
+      const d = new Date(startDate);
+      d.setDate(d.getDate()+i);
+      const j = toJalaali(d.getFullYear(), d.getMonth()+1, d.getDate());
+      days.push({ jy:j.jy, jm:j.jm, jd:j.jd, key: calDKey(j.jy,j.jm,j.jd) });
+    }
+    return days;
+  }
+
+  function todayCalKey(){
+    const now = new Date();
+    const j = toJalaali(now.getFullYear(), now.getMonth()+1, now.getDate());
+    return calDKey(j.jy, j.jm, j.jd);
+  }
+
+  const ROUTINE_DONE_MARK = 'انجام شد ✓';
+
+  function routineWidgetSVG(action, x, y, anchor, color){
+    if (!action.logs || typeof action.logs !== 'object') action.logs = {};
+    const days = jalaaliCurrentWeekDates();
+    const tKey = todayCalKey();
+    const doneToday = !!action.logs[tKey];
+    const cell = 9, gap = 2.5;
+    const totalW = cell*7 + gap*6;
+    const stripX = anchor === 'start' ? x : x - totalW;
+    const toggleCx = anchor === 'start' ? x - 13 : x + 13;
+    let html = `<g class="routine-widget">`;
+    html += `<circle data-routine-toggle="${action.id}" cx="${toggleCx}" cy="${y}" r="8" fill="${doneToday? color : 'transparent'}" stroke="${color}" stroke-width="1.4" style="cursor:pointer;pointer-events:all;"/>`;
+    if (doneToday) html += `<text x="${toggleCx}" y="${y+3}" text-anchor="middle" font-size="9" fill="#12142a" style="pointer-events:none;">✓</text>`;
+    html += `<g transform="translate(${stripX},${y-cell/2})">`;
+    days.forEach((d,i)=>{
+      const has = !!action.logs[d.key];
+      const isToday = d.key === tKey;
+      html += `<rect data-routine-cell="${action.id}" data-key="${d.key}" x="${i*(cell+gap)}" y="0" width="${cell}" height="${cell}" rx="2" fill="${has?color:'rgba(255,255,255,0.10)'}" stroke="${isToday?color:'transparent'}" stroke-width="1" style="cursor:pointer;pointer-events:all;"/>`;
+    });
+    html += `</g></g>`;
+    return html;
+  }
+
+  function findActionAnywhere(actionId){
+    for (const g of state.goals){
+      const found = findActionNode(g.actions, actionId);
+      if (found) return { node: found.node, goal: g };
+    }
+    return null;
+  }
+
+  function toggleRoutineLog(actionId, key){
+    const res = findActionAnywhere(actionId);
+    if (!res) return;
+    const node = res.node;
+    if (!node.logs || typeof node.logs !== 'object') node.logs = {};
+    if (node.logs[key]) delete node.logs[key];
+    else node.logs[key] = ROUTINE_DONE_MARK;
+    scheduleMapSave();
+    render();
+  }
 
   let calTarget = null;
   let calView = 'day';
