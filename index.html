@@ -31,7 +31,7 @@
 <link rel="icon" href="icons/icon-192.png">
 <link rel="apple-touch-icon" href="icons/icon-192.png">
 <link rel="preconnect" href="https://fonts.googleapis.com">
-<link href="https://fonts.googleapis.com/css2?family=Vazirmatn:wght@400;500;600;700&display=swap" rel="stylesheet">
+<link href="https://fonts.googleapis.com/css2?family=Vazirmatn:wght@400;500;600;700;800;900&display=swap" rel="stylesheet">
 <style>
   :root{
     --bg-1:#0a0c18;
@@ -100,6 +100,9 @@
     color:var(--text-main);
     -webkit-user-select:none;user-select:none;
   }
+  body.map-hidden #stage,
+  body.map-hidden #topbar,
+  body.map-hidden #toolbar{display:none !important;}
   #stage{width:100%;height:100%;touch-action:none;cursor:grab;}
   #stage.grabbing{cursor:grabbing;}
   #stage.node-drag{cursor:pointer;}
@@ -585,7 +588,6 @@
   }
   .reached-toggle input{width:16px;height:16px;accent-color:#2dd4bf;cursor:pointer;flex-shrink:0;}
 </style>
-<link href="https://fonts.googleapis.com/css2?family=Vazirmatn:wght@400;500;600;700;800;900&display=swap" rel="stylesheet">
 <style>
 /* ===== styles for the embedded گrاtitude bank app, scoped under #grat-root ===== */
 #grat-root{
@@ -3876,9 +3878,6 @@
     <div class="custom-box">
       <div class="lbl">🛍️ خرید مورد دلخواه</div>
       <div class="hint">هر چیزی که دوستش داری رو یکی‌یکی اضافه کن، بعد همه رو با هم بریز تو سبد</div>
-      <button class="btn full" style="margin-bottom:10px;" onclick="openBankCalendar('shop')">📅 تقویم خریدها</button>
-      <input id="custom-name" placeholder="مثلاً: کفش مورد علاقه‌ام">
-
       <div class="image-picker">
         <div class="lbl2">🖼️ تصویرش رو انتخاب کن</div>
         <div class="image-preview" id="custom-image-preview">تصویری انتخاب نشده</div>
@@ -3887,7 +3886,11 @@
         <input id="custom-image-url" placeholder="یا لینک تصویر از اینترنت را بچسبان" oninput="handleCustomUrl()">
       </div>
 
+      <input id="custom-name" placeholder="مثلاً: کفش مورد علاقه‌ام">
+
       <input id="custom-price" placeholder="مبلغ — مثلاً 300,000" inputmode="numeric" oninput="formatAmountInput(this)">
+
+      <button class="btn full" style="margin-bottom:10px;" onclick="openBankCalendar('shop')">📅 تقویم خریدها</button>
 
       <button class="submit secondary" onclick="addToPendingList()">➕ افزودن به لیست</button>
 
@@ -5437,11 +5440,13 @@ updateCartBadge();
 
   function showMap(){
     root.classList.remove("active");
+    document.body.classList.remove("map-hidden");
     btnMap.classList.add("active");
     btnGrat.classList.remove("active");
   }
   function showGrat(){
     root.classList.add("active");
+    document.body.classList.add("map-hidden");
     btnGrat.classList.add("active");
     btnMap.classList.remove("active");
   }
