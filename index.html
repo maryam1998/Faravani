@@ -565,7 +565,7 @@
     width:100%;height:100%;box-sizing:border-box;
     resize:none;outline:none;
     border-radius:10px;
-    border:1px solid rgba(45,212,191,0.45);
+    border:none;
     background:rgba(14,16,34,0.88);
     color:#eef0fa;
     font-family:'Vazirmatn',Tahoma,sans-serif;
@@ -574,7 +574,7 @@
     direction:rtl;
     touch-action:auto;
   }
-  .feeling-textarea:focus{border-color:#2dd4bf;}
+  .feeling-textarea:focus{border:none;}
   .feeling-textarea::placeholder{color:var(--text-dim);}
 
   .reached-row{
@@ -1212,17 +1212,43 @@
 #grat-root .quick-add .lbl{font-size:12.5px; font-weight:800; margin-bottom:4px;}
 #grat-root .quick-add .sub{font-size:10.5px; color:var(--muted); margin-bottom:10px; line-height:1.6;}
 #grat-root .quick-add-row{display:flex; gap:8px;}
-#grat-root .quick-add-row input{
+#grat-root .quick-add-row input, #grat-root .quick-add-row textarea{
     flex:1; font-family:inherit; font-size:13px;
     border:1px solid var(--line); border-radius:11px;
     padding:11px 12px; outline:none; background:var(--card);
   }
-#grat-root .quick-add-row input:focus{border-color:var(--emerald-300);}
+#grat-root .quick-add-row textarea{
+    resize:none; line-height:1.5; max-height:120px; overflow-y:auto;
+    color:var(--ink); min-height:42px;
+  }
+#grat-root .quick-add-row input:focus, #grat-root .quick-add-row textarea:focus{border-color:var(--emerald-300);}
 #grat-root .quick-add-row button{
     border:none; border-radius:11px; padding:0 16px;
     background:var(--emerald-700); color:#fff; font-family:inherit;
     font-size:13px; font-weight:800; cursor:pointer;
+    align-self:flex-end;
   }
+#grat-root .grat-count-badge{
+    margin:4px 18px 0; padding:10px 14px; border-radius:12px;
+    background:var(--surface); border:1px solid var(--line);
+    display:flex; justify-content:space-between; align-items:center;
+    font-size:12.5px; color:var(--ink-soft);
+  }
+#grat-root .grat-count-badge b{font-size:15px; color:var(--emerald-300);}
+#grat-root .grat-edit-actions{display:flex; gap:4px;}
+#grat-root .grat-edit-actions button{
+    border:none; background:transparent; cursor:pointer; font-size:14px;
+    padding:4px 6px; border-radius:8px; color:var(--muted);
+  }
+#grat-root .grat-edit-actions button:hover{background:rgba(255,255,255,0.08);}
+#grat-root .tx-item .t1{white-space:pre-wrap; word-break:break-word;}
+#grat-root .modal-card textarea{
+    width:100%; font-family:inherit; font-size:14px;
+    border:1px solid var(--line); border-radius:12px;
+    padding:12px 14px; outline:none; background:var(--surface);
+    resize:vertical; min-height:90px; color:var(--ink); line-height:1.6;
+  }
+#grat-root .modal-card textarea:focus{border-color:var(--emerald-300);}
 #grat-root .hist-total{
     margin:6px 18px 18px;
     padding:18px;
@@ -1670,6 +1696,7 @@
       <span>این یه کار روتینه که باید مرتب انجامش بدم</span>
     </label>
     <button class="btn full panel-cal-btn" style="margin-top:10px;">📅 تقویم پیشرفت این شاخه</button>
+    <button class="btn full gold" id="panel-action-add-sub" style="margin-top:10px;">＋ زیرشاخه</button>
   </div>
 
   <div id="panel-danger">
@@ -3377,6 +3404,25 @@
     panelActionWeightVal.textContent = toFa(+panelActionWeight.value);
   });
 
+  document.getElementById('panel-action-add-sub').addEventListener('click', ()=>{
+    if (!currentEditingAction) return;
+    const g = state.goals.find(g=>g.id===currentEditingAction.goalId);
+    if (!g) return;
+    const found = findActionNode(g.actions, currentEditingAction.actionId);
+    if (!found) return;
+    // ذخیره‌ی تغییرات فعلی قبل از افزودن زیرشاخه
+    found.node.text = panelActionText.value.trim() || 'بدون عنوان';
+    found.node.color = panelActionColor.value;
+    found.node.weight = +panelActionWeight.value;
+    found.node.images = currentImages.slice();
+    found.node.isRoutine = document.getElementById('panel-action-routine').checked;
+    found.node.children = found.node.children || [];
+    const child = { id:uid(), text:'', weight:5, color:null, children:[], detached:false, images:[], radius:10, createdAt: Date.now() };
+    found.node.children.push(child);
+    render();
+    openPanelForAction(currentEditingAction.goalId, child.id);
+  });
+
   document.getElementById('panel-save-btn').addEventListener('click', ()=>{
     if (!panelTarget) return;
     const images = currentImages.slice();
@@ -3851,7 +3897,7 @@
       <div class="lbl">🧠 مغزت رو تربیت کن تا داشته‌هات رو ببینه</div>
       <div class="sub">طبق علم اعصاب، هر بار شکرگذاری می‌کنی، مسیرهای عصبیِ مثبت‌نگری در مغزت قوی‌تر می‌شن.</div>
       <div class="quick-add-row">
-        <input id="home-grat-input" placeholder="مثلاً: سلامتی خانواده‌ام..." onkeydown="if(event.key==='Enter')addGratitudeHome()">
+        <textarea id="home-grat-input" rows="1" placeholder="مثلاً: سلامتی خانواده‌ام..." oninput="autoGrowGratInput(this)" onkeydown="if(event.key==='Enter' && (event.ctrlKey||event.metaKey)){event.preventDefault();addGratitudeHome();}"></textarea>
         <button onclick="addGratitudeHome()">افزودن</button>
       </div>
       <label class="reached-toggle" style="margin-top:8px;margin-bottom:0;">
@@ -4010,13 +4056,18 @@
     <div class="quick-add">
       <div class="lbl">🙏 همین حالا برای چی شکرگذاری هستی؟</div>
       <div class="quick-add-row">
-        <input id="grat-input" placeholder="مثلاً: سلامتی خانواده‌ام..." onkeydown="if(event.key==='Enter')addGratitude()">
+        <textarea id="grat-input" rows="1" placeholder="مثلاً: سلامتی خانواده‌ام..." oninput="autoGrowGratInput(this)" onkeydown="if(event.key==='Enter' && (event.ctrlKey||event.metaKey)){event.preventDefault();addGratitude();}"></textarea>
         <button onclick="addGratitude()">افزودن</button>
       </div>
       <label class="reached-toggle" style="margin-top:8px;margin-bottom:0;">
         <input type="checkbox" id="grat-share">
         <span>🌍 این یکی برای دوستان هم‌فرکانسی هم نمایش داده بشه</span>
       </label>
+    </div>
+
+    <div class="grat-count-badge">
+      <span>🙏 تعداد شکرگذاری‌های ثبت‌شده</span>
+      <b id="grat-count">۰</b>
     </div>
 
     <button class="btn full" style="margin:10px 0;" onclick="openBankCalendar('gratitude')">📅 تقویم شکرگذاری</button>
@@ -4235,6 +4286,18 @@
     </div>
   </div>
 
+  <!-- edit gratitude entry modal -->
+  <div class="modal-overlay" id="grat-edit-modal">
+    <div class="modal-card" style="text-align:right;">
+      <div class="m-seal" style="text-align:center;">🙏</div>
+      <h2 style="text-align:center;">ویرایش شکرگذاری</h2>
+      <textarea id="grat-edit-text" rows="4" placeholder="متن شکرگذاری..."></textarea>
+      <button class="primary-btn" style="margin:16px 0 8px;" onclick="saveGratEdit()">ذخیره تغییرات</button>
+      <button class="ghost-btn" style="margin:0 0 8px;" onclick="deleteGratEntry()">🗑 حذف این شکرگذاری</button>
+      <button class="ghost-btn" style="margin:0;" onclick="closeGratEditor()">انصراف</button>
+    </div>
+  </div>
+
   <!-- shared calendar modal (gratitude / shop / beliefs) -->
   <div class="modal-overlay" id="bank-cal-modal">
     <div class="modal-card cal-modal">
@@ -4297,6 +4360,11 @@ function containsBannedContent(text){
 }
 function escapeHtml(str){
   return (str==null?'':String(str)).replace(/[&<>"']/g, c=>({'&':'&amp;','<':'&lt;','>':'&gt;','"':'&quot;',"'":'&#39;'}[c]));
+}
+function nl2br(str){ return String(str).replace(/\n/g, '<br>'); }
+function autoGrowGratInput(el){
+  el.style.height = 'auto';
+  el.style.height = Math.min(el.scrollHeight, 120) + 'px';
 }
 
 const STORAGE_KEY = 'abundanceBankData';
@@ -4618,14 +4686,29 @@ async function syncGratitudeShare(entry){
     if(!entry || !entry.shared) return;
     if(!window.supabaseClient) return;
     const text = (entry.text || '').trim();
-    if(!text || containsBannedContent(text)) return;
-    await window.supabaseClient.from('public_gratitude').upsert({
+    if(!text){ return; }
+    if(containsBannedContent(text)){
+      toast('این متن قابل اشتراک‌گذاری نیست ⚠️');
+      return;
+    }
+    // یادداشت: قبلاً از upsert با onConflict استفاده می‌شد که چون جدول public_gratitude
+    // محدودیت یکتای (device_id,iso,text) نداره، درخواست با خطا مواجه می‌شد و بی‌صدا نادیده گرفته می‌شد
+    // (همون دلیلی که موردهای علامت‌خورده برای اشتراک‌گذاری توی «دوستان هم‌فرکانسی» نشون داده نمی‌شدن).
+    // برای رفع این مشکل، اینجا یک insert ساده انجام می‌دیم و خطا رو هم به کاربر نشون می‌دیم.
+    const { error } = await window.supabaseClient.from('public_gratitude').insert({
       device_id: state.authUserId || state.loginId || 'local-guest',
       display_name: (state.name || 'کاربر فراوانی').slice(0,40),
       text: text.slice(0,300),
       iso: entry.iso || null
-    }, { onConflict: 'device_id,iso,text', ignoreDuplicates: true });
-  }catch(e){ console.warn('gratitude share sync failed', e); }
+    });
+    if(error){
+      console.warn('gratitude share sync failed', error);
+      toast('اشتراک‌گذاری با دوستان با مشکل مواجه شد ⚠️');
+    }
+  }catch(e){
+    console.warn('gratitude share sync failed', e);
+    toast('اشتراک‌گذاری با دوستان با مشکل مواجه شد ⚠️');
+  }
 }
 async function unsyncGratitudeShare(entry){
   try{
@@ -4744,10 +4827,14 @@ function renderHome(){
     row.innerHTML = `
       <div class="ic">${iconOrImage(g)}</div>
       <div class="mid">
-        <div class="t1">${g.text}</div>
+        <div class="t1">${nl2br(escapeHtml(g.text))}</div>
         <div class="t2">${g.day} ${g.date} - ${g.time}</div>
       </div>
-      ${g.source==='manual' ? `<button class="share-toggle-btn" title="${g.shared ? 'برای دوستان قابل دیدنه — خاموش کردنش' : 'با دوستان به اشتراک بذار'}" onclick="event.stopPropagation();toggleGratitudeShare(${g.id})">${g.shared ? '🌍' : '🔒'}</button>` : ''}
+      ${g.source==='manual' ? `
+      <div class="grat-edit-actions">
+        <button title="ویرایش" onclick="event.stopPropagation();goto('history');openGratEditor(${g.id})">✏️</button>
+        <button class="share-toggle-btn" title="${g.shared ? 'برای دوستان قابل دیدنه — خاموش کردنش' : 'با دوستان به اشتراک بذار'}" onclick="event.stopPropagation();toggleGratitudeShare(${g.id})">${g.shared ? '🌍' : '🔒'}</button>
+      </div>` : ''}
       ${g.amount ? `<div class="amt">${formatMoney(g.amount)}</div>` : `<span class="badge-manual">شکرگذاری</span>`}`;
     wrap.appendChild(row);
   });
@@ -4769,6 +4856,7 @@ function addGratitudeHome(){
   state.shareGratitude = shared;
   saveState();
   input.value='';
+  autoGrowGratInput(input);
   renderHome();
   toast(shared ? 'به لیست شکرگذاری اضافه و با دوستان به اشتراک گذاشته شد 🙏🌍' : 'به لیست شکرگذاری اضافه شد 🙏');
   if(shared) syncGratitudeShare(newEntry);
@@ -5018,6 +5106,7 @@ function addGratitude(){
   state.shareGratitude = shared;
   saveState();
   input.value='';
+  autoGrowGratInput(input);
   renderHistory();
   toast(shared ? 'به لیست شکرگذاری اضافه و با دوستان به اشتراک گذاشته شد 🙏🌍' : 'به لیست شکرگذاری اضافه شد 🙏');
   if(shared) syncGratitudeShare(newEntry);
@@ -5031,6 +5120,8 @@ function renderHistory(){
   const empty = document.getElementById('history-empty');
   list.innerHTML = '';
   document.getElementById('hist-total').textContent = formatMoney(depositToman());
+  const countEl = document.getElementById('grat-count');
+  if(countEl) countEl.textContent = (state.gratitude.length).toLocaleString('fa-IR');
   if(state.gratitude.length===0){
     empty.style.display='block';
     return;
@@ -5048,13 +5139,63 @@ function renderHistory(){
     row.innerHTML = `
       <div class="ic">${iconOrImage(g)}</div>
       <div class="mid">
-        <div class="t1">${g.text}</div>
+        <div class="t1">${nl2br(escapeHtml(g.text))}</div>
         <div class="t2">${g.day} ${g.date} - ${g.time}</div>
       </div>
-      ${g.source==='manual' ? `<button class="share-toggle-btn" title="${g.shared ? 'برای دوستان قابل دیدنه — خاموش کردنش' : 'با دوستان به اشتراک بذار'}" onclick="event.stopPropagation();toggleGratitudeShare(${g.id})">${g.shared ? '🌍' : '🔒'}</button>` : ''}
+      ${g.source==='manual' ? `
+      <div class="grat-edit-actions">
+        <button title="ویرایش" onclick="event.stopPropagation();openGratEditor(${g.id})">✏️</button>
+        <button class="share-toggle-btn" title="${g.shared ? 'برای دوستان قابل دیدنه — خاموش کردنش' : 'با دوستان به اشتراک بذار'}" onclick="event.stopPropagation();toggleGratitudeShare(${g.id})">${g.shared ? '🌍' : '🔒'}</button>
+      </div>` : ''}
       ${g.amount ? `<div class="amt">${formatMoney(g.amount)}</div>` : `<span class="badge-manual">شکرگذاری</span>`}`;
     list.appendChild(row);
   });
+}
+
+/* ---------------- ویرایش/حذف شکرگذاری ---------------- */
+let editingGratId = null;
+function openGratEditor(id){
+  const g = (state.gratitude||[]).find(x=>x.id===id);
+  if(!g) return;
+  editingGratId = id;
+  document.getElementById('grat-edit-text').value = g.text || '';
+  document.getElementById('grat-edit-modal').classList.add('show');
+}
+function closeGratEditor(){
+  editingGratId = null;
+  document.getElementById('grat-edit-modal').classList.remove('show');
+}
+function saveGratEdit(){
+  if(editingGratId==null) return;
+  const g = (state.gratitude||[]).find(x=>x.id===editingGratId);
+  if(!g) return;
+  const newText = (document.getElementById('grat-edit-text').value||'').trim();
+  if(!newText){ toast('متن نمی‌تونه خالی باشه 🌱'); return; }
+  const wasShared = g.shared;
+  const oldEntrySnapshot = Object.assign({}, g);
+  g.text = newText;
+  saveState();
+  if(wasShared){
+    // چون اشتراک‌گذاری بر اساس متن قبلی ثبت شده، اول نسخه‌ی قدیمی رو حذف و بعد نسخه‌ی جدید رو اضافه می‌کنیم
+    unsyncGratitudeShare(oldEntrySnapshot);
+    syncGratitudeShare(g);
+  }
+  closeGratEditor();
+  renderHistory();
+  renderHome();
+  toast('شکرگذاری ویرایش شد ✏️');
+}
+function deleteGratEntry(){
+  if(editingGratId==null) return;
+  const g = (state.gratitude||[]).find(x=>x.id===editingGratId);
+  if(!g) return;
+  if(g.shared) unsyncGratitudeShare(g);
+  state.gratitude = state.gratitude.filter(x=>x.id!==editingGratId);
+  saveState();
+  closeGratEditor();
+  renderHistory();
+  renderHome();
+  toast('شکرگذاری حذف شد 🗑');
 }
 
 /* ---------------- belief & attention flow ---------------- */
