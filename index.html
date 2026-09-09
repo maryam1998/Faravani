@@ -3837,6 +3837,7 @@
     <div class="custom-box">
       <div class="lbl">🛍️ خرید مورد دلخواه</div>
       <div class="hint">هر چیزی که دوستش داری رو یکی‌یکی اضافه کن، بعد همه رو با هم بریز تو سبد</div>
+      <button class="btn full" style="margin-bottom:10px;" onclick="openBankCalendar('shop')">📅 تقویم خریدها</button>
       <input id="custom-name" placeholder="مثلاً: کفش مورد علاقه‌ام">
 
       <div class="image-picker">
@@ -3979,6 +3980,8 @@
       </div>
     </div>
 
+    <button class="btn full" style="margin:10px 0;" onclick="openBankCalendar('gratitude')">📅 تقویم شکرگذاری</button>
+
     <div class="hist-total">
       <div class="l1">مجموع فراوانی دریافت‌شده در این بازی</div>
       <div class="l2" id="hist-total">۰</div>
@@ -4028,31 +4031,24 @@
 
     <div class="section-label"><h2>🧠 باور و توجه</h2></div>
 
+    <div class="section-label"><h2>📜 متن روزهای آینده‌ام</h2></div>
     <div class="belief-flow-card">
-      <div class="bf-head">💭 ذهنیت قدیمی</div>
-      <p class="bf-desc">ذهنیتی که می‌خواهی تغییرش بدهی:</p>
-      <div class="quote-box">«من بی‌عرضه‌ام.»<br>«پول درآوردن سخت است.»<br>«من خوش‌شانس نیستم.»</div>
-      <textarea id="b-old" rows="2" placeholder="ذهنیت قدیمی‌ات را اینجا بنویس..." oninput="updateBeliefField('oldText', this.value)"></textarea>
-      <div class="intensity-row">
-        <div class="intensity-labels"><span>شدت ذهنیت</span><span id="b-old-intensity-val">۵۰</span></div>
-        <input type="range" class="bf-range" id="b-old-intensity" min="0" max="100" value="50" oninput="updateBeliefField('oldIntensity', this.value)">
+      <p class="bf-desc">مثل تمرین باب پراکتور: زندگی‌ای که می‌خوای رو همین حالا، انگار که اتفاق افتاده، بنویس. با «بسیار خوشحال و سپاسگزارم حالا که...» شروع کن.</p>
+      <textarea id="b-future-text" rows="4" placeholder="بسیار خوشحال و سپاسگزارم حالا که..." oninput="updateFutureText(this.value)"></textarea>
+      <div id="future-progress-wrap" style="display:none;margin-top:12px;">
+        <div class="intensity-labels"><span>روز <b id="future-day-num">۰</b> از ۹۰</span><span id="future-day-pct">۰٪</span></div>
+        <div class="tb-bar" style="margin:8px 0 12px;"><div class="tb-bar-fill" id="future-progress-bar" style="width:0%;"></div></div>
       </div>
-    </div>
-
-    <div class="belief-flow-card">
-      <div class="bf-head">🌱 ذهنیت جدید</div>
-      <p class="bf-desc">می‌خواهی چه ذهنیتی را تقویت کنی؟</p>
-      <div class="quote-box">«من می‌توانم راحت‌تر پول دربیاورم.»<br>«من به توانایی‌هایم اعتماد دارم.»<br>«من می‌توانم فرصت‌های خوبی را ببینم.»</div>
-      <textarea id="b-new" rows="2" placeholder="ذهنیت جدید‌ات را اینجا بنویس..." oninput="updateBeliefField('newText', this.value)"></textarea>
-      <div class="intensity-row">
-        <div class="intensity-labels"><span>شدت ذهنیت جدید</span><span id="b-new-intensity-val">۵۰</span></div>
-        <input type="range" class="bf-range gold" id="b-new-intensity" min="0" max="100" value="50" oninput="updateBeliefField('newIntensity', this.value)">
+      <div class="ras-btn-row">
+        <button class="ras-activate-btn" id="future-start-btn" onclick="startFutureProtocol()">شروع دوره‌ی ۹۰ روزه</button>
+        <button class="today-btn2" id="future-read-btn" style="display:none;" onclick="markFutureRead()">📖 امروز خواندم</button>
       </div>
+      <button class="btn full" style="margin-top:10px;" onclick="openBankCalendar('beliefs')">📅 تقویم خواندن</button>
     </div>
 
     <div class="belief-flow-card">
       <div class="bf-head">👁️ به مغزت بگو چه چیزهایی را ردیابی کند</div>
-      <p class="bf-desc">می‌تواند شامل ذهنیت جدید یا خواسته‌ات باشد.</p>
+      <p class="bf-desc">می‌تواند شامل متن بالا یا هر خواسته‌ی دیگه‌ات باشد. این دقیقاً همون سیستم RAS مغزه: هرچی رو که بهش بگی مهمه، خودش شروع می‌کنه پیداش کردن.</p>
       <div class="ras-input-row">
         <textarea id="b-tracking" rows="1"></textarea>
         <button class="ras-add-btn" onclick="addTrackingItem()">+</button>
@@ -4179,6 +4175,24 @@
     </div>
   </div>
 
+  <!-- shared calendar modal (gratitude / shop / beliefs) -->
+  <div class="modal-overlay" id="bank-cal-modal">
+    <div class="modal-card cal-modal">
+      <div class="cal-modal-head">
+        <h2 id="bank-cal-title">📅 تقویم</h2>
+        <button class="cal-x" onclick="closeBankCalendar()">✕</button>
+      </div>
+      <div class="cal-nav">
+        <button type="button" class="cal-nav-btn" onclick="bankCalNav(-1)">‹</button>
+        <span id="bank-cal-label"></span>
+        <button type="button" class="cal-nav-btn" onclick="bankCalNav(1)">›</button>
+      </div>
+      <div class="cal-weekdays"><span>ش</span><span>ی</span><span>د</span><span>س</span><span>چ</span><span>پ</span><span>ج</span></div>
+      <div class="cal-grid" id="bank-cal-grid"></div>
+      <div id="bank-cal-day-detail"></div>
+    </div>
+  </div>
+
   <!-- bottom nav -->
   <nav class="bottom-nav">
     <button class="nav-btn active" data-nav="home" onclick="goto('home')"><span class="n-ic">🏠</span>خانه</button>
@@ -4266,14 +4280,17 @@ function loadState(){
       if(!s.cardExpiry) s.cardExpiry = '∞ / ∞';
       if(!s.cardCVV) s.cardCVV = '۱۴۰';
       if(!s.cardTheme) s.cardTheme = 'emerald';
+      if(typeof s.futureText !== 'string') s.futureText = '';
+      if(!s.futureStartDate) s.futureStartDate = null;
+      if(!s.futureReadDays) s.futureReadDays = [];
       return s;
     }
   }catch(e){}
   return { name:'', currency:'', startDate:'', history:[], gratitude:[], beliefs:[], currentBelief:defaultCurrentBelief(), evidenceLog:[], streakHistory:[], practiceLog:[], loginId:'local-guest', alarmEnabled:false, alarmTime:'20:00',
-    bankName:'بانک فراوانی', cardNumber:'5859 8312 8347 6690', cardExpiry:'∞ / ∞', cardCVV:'۱۴۰', cardTheme:'emerald' };
+    bankName:'بانک فراوانی', cardNumber:'5859 8312 8347 6690', cardExpiry:'∞ / ∞', cardCVV:'۱۴۰', cardTheme:'emerald', futureText:'', futureStartDate:null, futureReadDays:[] };
 }
 function defaultCurrentBelief(){
-  return { oldText:'', oldIntensity:50, newText:'', newIntensity:50, trackingItems:[], trackingActive:false, attentionLever:50, visualNote:'', visualImages:[] };
+  return { trackingItems:[], trackingActive:false, attentionLever:50, visualNote:'', visualImages:[] };
 }
 function saveState(){
   localStorage.setItem(STORAGE_KEY, JSON.stringify(state));
@@ -4550,7 +4567,7 @@ function addGratitudeHome(){
   state.gratitude.push({
     id: Date.now()+Math.random(),
     text: val, icon:'🙏', image:null, amount:null,
-    date: np.date, day: np.day, time: np.time, source:'manual'
+    date: np.date, day: np.day, time: np.time, iso: np.iso, source:'manual'
   });
   saveState();
   input.value='';
@@ -4747,7 +4764,7 @@ function processPayment(){
         icon: it.icon,
         image: it.image || null,
         amount: it.qty*it.price,
-        date: record.date, day: record.day, time: record.time,
+        date: record.date, day: record.day, time: record.time, iso: record.iso,
         source:'purchase', txId: record.id
       });
     });
@@ -4792,7 +4809,7 @@ function addGratitude(){
   state.gratitude.push({
     id: Date.now()+Math.random(),
     text: val, icon:'🙏', image:null, amount:null,
-    date: np.date, day: np.day, time: np.time, source:'manual'
+    date: np.date, day: np.day, time: np.time, iso: np.iso, source:'manual'
   });
   saveState();
   input.value='';
@@ -4833,11 +4850,9 @@ function renderHistory(){
 /* ---------------- belief & attention flow ---------------- */
 function updateBeliefField(field, value){
   if(!state.currentBelief) state.currentBelief = defaultCurrentBelief();
-  const numericFields = ['oldIntensity','newIntensity','attentionLever'];
+  const numericFields = ['attentionLever'];
   state.currentBelief[field] = numericFields.includes(field) ? Number(value) : value;
   saveState();
-  if(field==='oldIntensity') document.getElementById('b-old-intensity-val').textContent = Number(value).toLocaleString('fa-IR');
-  if(field==='newIntensity') document.getElementById('b-new-intensity-val').textContent = Number(value).toLocaleString('fa-IR');
 }
 function addTrackingItem(){
   if(!state.currentBelief) state.currentBelief = defaultCurrentBelief();
@@ -4955,8 +4970,6 @@ function toggleToday(){
       dateKey: t,
       dateLabel: now.toLocaleDateString('fa-IR'),
       timeLabel: now.toLocaleTimeString('fa-IR', { hour:'2-digit', minute:'2-digit' }),
-      oldText: cb.oldText || '',
-      newText: cb.newText || '',
       trackingItems: (cb.trackingItems||[]).map(it=>it.text)
     });
     toast('امروز ثبت شد 🔥');
@@ -4987,8 +5000,6 @@ function renderStreakHistory(){
   wrap.innerHTML = items.map(h=>`
     <div class="sh-item">
       <div class="sh-time">${escapeHtmlSafe(h.dateLabel)} — ${escapeHtmlSafe(h.timeLabel)}</div>
-      ${h.oldText ? `<div class="sh-row sh-old"><b>ذهنیت قدیمی:</b> ${escapeHtmlSafe(h.oldText)}</div>` : ''}
-      ${h.newText ? `<div class="sh-row sh-new"><b>ذهنیت جدید:</b> ${escapeHtmlSafe(h.newText)}</div>` : ''}
       ${h.trackingItems && h.trackingItems.length ? `<div class="sh-row sh-tracking"><b>ردیابی:</b> ${h.trackingItems.map(escapeHtmlSafe).join('، ')}</div>` : ''}
     </div>
   `).join('');
@@ -4996,12 +5007,6 @@ function renderStreakHistory(){
 function renderBeliefsView(){
   if(!state.currentBelief) state.currentBelief = defaultCurrentBelief();
   const cb = state.currentBelief;
-  document.getElementById('b-old').value = cb.oldText || '';
-  document.getElementById('b-old-intensity').value = cb.oldIntensity;
-  document.getElementById('b-old-intensity-val').textContent = Number(cb.oldIntensity).toLocaleString('fa-IR');
-  document.getElementById('b-new').value = cb.newText || '';
-  document.getElementById('b-new-intensity').value = cb.newIntensity;
-  document.getElementById('b-new-intensity-val').textContent = Number(cb.newIntensity).toLocaleString('fa-IR');
   document.getElementById('b-attention-lever').value = cb.attentionLever;
   document.getElementById('b-visual-note').value = cb.visualNote || '';
   renderVisualGallery();
@@ -5010,9 +5015,149 @@ function renderBeliefsView(){
   renderEvidence();
   renderStreak();
   renderStreakHistory();
+  renderFutureUI();
   const sw = document.getElementById('alarm-switch');
   sw.classList.toggle('on', !!state.alarmEnabled);
   document.getElementById('alarm-time').value = state.alarmTime;
+}
+
+/* ---------------- future-life text: 90-day reading protocol ---------------- */
+function updateFutureText(val){
+  state.futureText = val;
+  saveState();
+}
+function dayKeyFromDate(d){ return d.getFullYear()+'-'+String(d.getMonth()+1).padStart(2,'0')+'-'+String(d.getDate()).padStart(2,'0'); }
+function startFutureProtocol(){
+  if(!(state.futureText||'').trim()){ toast('اول متنت رو بنویس 📜'); return; }
+  if(!state.futureStartDate) state.futureStartDate = dayKeyFromDate(new Date());
+  saveState();
+  renderFutureUI();
+  toast('دوره‌ی ۹۰ روزه شروع شد ✨');
+}
+function markFutureRead(){
+  if(!state.futureStartDate) return;
+  const t = dayKeyFromDate(new Date());
+  if(!state.futureReadDays) state.futureReadDays = [];
+  if(!state.futureReadDays.includes(t)){
+    state.futureReadDays.push(t);
+    saveState();
+    toast('امروز ثبت شد 📖');
+  }
+  renderFutureUI();
+}
+function renderFutureUI(){
+  const textEl = document.getElementById('b-future-text');
+  if(textEl) textEl.value = state.futureText || '';
+  const startBtn = document.getElementById('future-start-btn');
+  const readBtn = document.getElementById('future-read-btn');
+  const progressWrap = document.getElementById('future-progress-wrap');
+  if(!startBtn) return;
+  if(state.futureStartDate){
+    startBtn.style.display = 'none';
+    readBtn.style.display = '';
+    progressWrap.style.display = '';
+    const readCount = Math.min((state.futureReadDays||[]).length, 90);
+    const t = dayKeyFromDate(new Date());
+    const doneToday = (state.futureReadDays||[]).includes(t);
+    readBtn.textContent = doneToday ? '📖 امروز خواندم ✓' : '📖 امروز خواندم';
+    document.getElementById('future-day-num').textContent = readCount.toLocaleString('fa-IR');
+    document.getElementById('future-day-pct').textContent = Math.round(readCount/90*100).toLocaleString('fa-IR')+'٪';
+    document.getElementById('future-progress-bar').style.width = (readCount/90*100)+'%';
+  }else{
+    startBtn.style.display = '';
+    readBtn.style.display = 'none';
+    progressWrap.style.display = 'none';
+  }
+}
+
+/* ---------------- shared calendar: gratitude / shop / beliefs ---------------- */
+let bankCalKind = 'gratitude';
+let bankCalCursor = new Date();
+function dayKeyFromIso(iso){
+  if(!iso) return '';
+  const d = new Date(iso);
+  return dayKeyFromDate(d);
+}
+function openBankCalendar(kind){
+  bankCalKind = kind;
+  bankCalCursor = new Date();
+  bankCalCursor.setDate(1);
+  const titles = { gratitude:'📅 تقویم شکرگذاری', shop:'📅 تقویم خریدها', beliefs:'📅 تقویم خواندن متن آینده' };
+  document.getElementById('bank-cal-title').textContent = titles[kind] || '📅 تقویم';
+  document.getElementById('bank-cal-modal').classList.add('show');
+  renderBankCal();
+}
+function closeBankCalendar(){
+  document.getElementById('bank-cal-modal').classList.remove('show');
+}
+function bankCalNav(delta){
+  bankCalCursor.setMonth(bankCalCursor.getMonth()+delta);
+  renderBankCal();
+}
+function bankCalEntriesByDay(){
+  const byDay = {};
+  if(bankCalKind==='gratitude'){
+    (state.gratitude||[]).filter(g=>g.source!=='purchase' && g.iso).forEach(g=>{
+      const k = dayKeyFromIso(g.iso);
+      (byDay[k]=byDay[k]||[]).push(g);
+    });
+  }else if(bankCalKind==='shop'){
+    (state.history||[]).filter(h=>h.iso).forEach(h=>{
+      const k = dayKeyFromIso(h.iso);
+      (byDay[k]=byDay[k]||[]).push(h);
+    });
+  }else if(bankCalKind==='beliefs'){
+    (state.futureReadDays||[]).forEach(k=>{ (byDay[k]=byDay[k]||[]).push({read:true}); });
+  }
+  return byDay;
+}
+function renderBankCal(){
+  const grid = document.getElementById('bank-cal-grid');
+  const label = document.getElementById('bank-cal-label');
+  const y = bankCalCursor.getFullYear(), m = bankCalCursor.getMonth();
+  try{
+    label.textContent = new Intl.DateTimeFormat('fa-IR-u-ca-persian', {year:'numeric', month:'long'}).format(bankCalCursor);
+  }catch(e){ label.textContent = (m+1)+'/'+y; }
+  const byDay = bankCalEntriesByDay();
+  const daysInMonth = new Date(y, m+1, 0).getDate();
+  const startWeekday = new Date(y, m, 1).getDay();
+  const todayKeyStr = dayKeyFromDate(new Date());
+  let html = '';
+  for(let i=0;i<startWeekday;i++) html += '<span class="cal-cell empty"></span>';
+  for(let d=1; d<=daysInMonth; d++){
+    const dateObj = new Date(y, m, d);
+    const key = dayKeyFromDate(dateObj);
+    const has = !!byDay[key];
+    const isToday = key === todayKeyStr;
+    let faDay;
+    try{ faDay = new Intl.DateTimeFormat('fa-IR-u-ca-persian', {day:'numeric'}).format(dateObj); }
+    catch(e){ faDay = String(d); }
+    html += `<button type="button" class="cal-cell${has?' has-log':''}${isToday?' is-today':''}" data-key="${key}">${faDay}${has?'<i class="cal-dot"></i>':''}</button>`;
+  }
+  grid.innerHTML = html;
+  grid.querySelectorAll('.cal-cell[data-key]').forEach(btn=>{
+    btn.addEventListener('click', ()=> showBankCalDay(btn.dataset.key, byDay[btn.dataset.key]||[]));
+  });
+  document.getElementById('bank-cal-day-detail').innerHTML = '';
+}
+function showBankCalDay(key, items){
+  const detail = document.getElementById('bank-cal-day-detail');
+  if(!items.length){ detail.innerHTML = '<div class="empty-hint" style="padding:10px 0;">چیزی برای این روز ثبت نشده.</div>'; return; }
+  if(bankCalKind==='shop'){
+    detail.innerHTML = items.map(h=>`
+      <div class="sh-item">
+        <div class="sh-time">${escapeHtmlSafe(h.time||'')}</div>
+        ${h.items.map(it=>`<div class="sh-row">${it.icon||'🛍️'} ${escapeHtmlSafe(it.name)} — ${formatMoney(it.qty*it.price)}</div>`).join('')}
+      </div>`).join('');
+  }else if(bankCalKind==='beliefs'){
+    detail.innerHTML = '<div class="sh-item"><div class="sh-row">✅ متن آینده‌ات رو این روز خوندی</div></div>';
+  }else{
+    detail.innerHTML = items.map(g=>`
+      <div class="sh-item">
+        <div class="sh-time">${escapeHtmlSafe(g.time||'')}</div>
+        <div class="sh-row">${g.icon||'🙏'} ${escapeHtmlSafe(g.text)}</div>
+      </div>`).join('');
+  }
 }
 
 /* ---------------- daily reminder notification ---------------- */
