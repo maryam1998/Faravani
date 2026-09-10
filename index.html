@@ -1549,81 +1549,29 @@
   background:var(--surface-2); border:1px solid var(--line); border-radius:20px;
   padding:5px 12px; font-size:11.5px; color:var(--ink-soft);
 }
+#grat-root .dp-bullet-list{display:flex; flex-direction:column; gap:6px; margin-top:8px; margin-right:36px;}
+#grat-root .dp-bullet-row{
+  background:var(--surface-2); border:1px solid var(--line); border-radius:10px;
+  padding:8px 12px; font-size:12px; color:var(--ink-soft); display:flex; gap:6px; flex-wrap:wrap;
+}
+#grat-root .dp-bullet-row b{color:var(--ink); font-weight:800;}
+#grat-root .dp-final-line{margin-top:10px; margin-right:36px; font-size:12.5px; font-weight:700; color:var(--emerald-700);}
 
-/* ===== ambient background system: ساده (Calm) vs تمرکز/Self-Hypnosis ===== */
+/* ===== ambient background system: ساده (Calm) vs پس‌زمینه دلخواه (Custom Image) ===== */
 #ambient-bg{
   position:fixed;inset:0;z-index:1;
   pointer-events:none;overflow:hidden;
   opacity:0;transition:opacity .7s ease;
 }
-body.bg-mode-focus #ambient-bg{opacity:var(--amb-opacity,.28);}
+body.bg-mode-image #ambient-bg{opacity:var(--amb-opacity,.5);}
 /* هرگز نباید روی محتوا/دکمه‌ها غلبه کند: همیشه پشت stage و پنل‌ها می‌ماند */
-#ambient-bg .amb-layer{position:absolute;inset:-15%;display:none;}
-#ambient-bg[data-pattern="concentric"] .amb-concentric{display:block;}
-#ambient-bg[data-pattern="spiral"] .amb-spiral{display:block;}
-#ambient-bg[data-pattern="waves"] .amb-waves{display:block;}
-#ambient-bg[data-pattern="particles"] .amb-particles{display:block;}
-
-.amb-concentric{
-  background:repeating-radial-gradient(circle at 50% 50%, var(--accent) 0 1.5px, transparent 2px 84px);
-  transform-origin:50% 50%;
-  animation:amb-pulse 28s ease-in-out infinite;
+#ambient-bg-img{
+  position:absolute;inset:-8%;
+  background-size:cover;background-position:center;background-repeat:no-repeat;
+  filter:blur(var(--amb-blur,0px));
 }
-@keyframes amb-pulse{
-  0%,100%{transform:scale(1);opacity:.55;}
-  50%{transform:scale(1.14);opacity:.85;}
-}
-
-.amb-spiral{
-  background:conic-gradient(from 0deg at 50% 50%,
-    transparent 0deg, var(--accent) 10deg, transparent 26deg,
-    transparent 178deg, var(--accent) 190deg, transparent 206deg, transparent 360deg);
-  filter:blur(42px);
-  animation:amb-spin 110s linear infinite;
-}
-@keyframes amb-spin{to{transform:rotate(360deg);}}
-
-.amb-waves{
-  background:
-    linear-gradient(120deg, transparent 38%, var(--accent) 50%, transparent 62%),
-    linear-gradient(210deg, transparent 38%, var(--accent) 50%, transparent 62%);
-  background-size:220% 220%;
-  filter:blur(70px);
-  opacity:.6;
-  animation:amb-wave 40s ease-in-out infinite;
-}
-@keyframes amb-wave{
-  0%,100%{background-position:0% 50%, 100% 50%;}
-  50%{background-position:100% 40%, 0% 60%;}
-}
-
-.amb-particles i{
-  position:absolute;top:110%;width:9px;height:9px;border-radius:50%;
-  background:var(--accent);filter:blur(5px);opacity:.7;
-  animation:amb-float linear infinite;
-}
-@keyframes amb-float{
-  0%{transform:translateY(0);}
-  100%{transform:translateY(-130vh);}
-}
-#ambient-bg .amb-particles i:nth-child(1){left:6%;animation-duration:52s;animation-delay:0s;}
-#ambient-bg .amb-particles i:nth-child(2){left:16%;animation-duration:63s;animation-delay:-8s;}
-#ambient-bg .amb-particles i:nth-child(3){left:27%;animation-duration:47s;animation-delay:-21s;}
-#ambient-bg .amb-particles i:nth-child(4){left:38%;animation-duration:70s;animation-delay:-4s;}
-#ambient-bg .amb-particles i:nth-child(5){left:49%;animation-duration:55s;animation-delay:-33s;}
-#ambient-bg .amb-particles i:nth-child(6){left:59%;animation-duration:60s;animation-delay:-14s;}
-#ambient-bg .amb-particles i:nth-child(7){left:69%;animation-duration:44s;animation-delay:-26s;}
-#ambient-bg .amb-particles i:nth-child(8){left:79%;animation-duration:66s;animation-delay:-2s;}
-#ambient-bg .amb-particles i:nth-child(9){left:89%;animation-duration:50s;animation-delay:-38s;}
-#ambient-bg .amb-particles i:nth-child(10){left:95%;animation-duration:58s;animation-delay:-19s;}
-
-body.bg-anim-off #ambient-bg .amb-layer,
-body.bg-anim-off #ambient-bg .amb-particles i{animation-play-state:paused !important;}
-@media (prefers-reduced-motion:reduce){
-  #ambient-bg .amb-layer,#ambient-bg .amb-particles i{animation-play-state:paused !important;}
-}
-/* در تب بانک فراوانی، پس‌زمینه‌ی متحرک فقط از حاشیه‌های بیرون کارت دیده می‌شود؛ کارت‌ها همچنان کاملاً خوانا و مات باقی می‌مانند */
-body.bg-mode-focus #grat-root{background:transparent;}
+/* در تب بانک فراوانی، پس‌زمینه‌ی دلخواه فقط از حاشیه‌های بیرون کارت دیده می‌شود؛ کارت‌ها همچنان کاملاً خوانا و مات باقی می‌مانند */
+body.bg-mode-image #grat-root{background:transparent;}
 
 /* کنترل‌های انتخاب پس‌زمینه در تنظیمات */
 .bgmode-row{display:flex;gap:8px;}
@@ -1635,29 +1583,28 @@ body.bg-mode-focus #grat-root{background:transparent;}
 }
 .bgmode-btn .bgmode-icon{font-size:17px;}
 .bgmode-btn.active{border-color:var(--accent);color:var(--text-main);background:rgba(244,197,66,0.12);}
-.bgpattern-row{display:flex;gap:6px;flex-wrap:wrap;}
-.bgpattern-btn{
-  padding:7px 10px;border-radius:10px;cursor:pointer;white-space:nowrap;
-  background:var(--input-bg);border:1px solid var(--panel-border);color:var(--text-dim);
-  font-family:inherit;font-size:11px;font-weight:500;
+#bgmode-opacity,#bgmode-blur{width:100%;}
+.bgimg-upload-row{display:flex;align-items:center;gap:10px;}
+.bgimg-preview{
+  width:52px;height:52px;border-radius:10px;object-fit:cover;
+  border:1px solid var(--panel-border);background:var(--input-bg);flex-shrink:0;
 }
-.bgpattern-btn.active{border-color:var(--accent);color:var(--text-main);background:rgba(244,197,66,0.12);}
-#bgmode-opacity{width:100%;}
-.bg-sci-note{margin:10px 0 0;font-size:11px;line-height:1.8;color:var(--text-dim);}
-.bg-sci-note a{color:var(--accent);text-decoration:none;font-weight:600;}
+.bgimg-upload-label{
+  padding:8px 12px;border-radius:10px;cursor:pointer;
+  background:var(--input-bg);border:1px solid var(--panel-border);color:var(--text-main);
+  font-family:inherit;font-size:12px;font-weight:600;
+}
+.bgimg-remove-btn{
+  background:none;border:none;color:#c96b6b;font-size:12px;cursor:pointer;font-family:inherit;
+}
 
 </style>
 </head>
 <body>
 
-<!-- ===== پس‌زمینه‌ی محیطی: حالت ساده (Calm) یا تمرکز/Self-Hypnosis — پشت نقشه و بانک فراوانی ===== -->
-<div id="ambient-bg" data-pattern="concentric" aria-hidden="true">
-  <div class="amb-layer amb-concentric"></div>
-  <div class="amb-layer amb-spiral"></div>
-  <div class="amb-layer amb-waves"></div>
-  <div class="amb-layer amb-particles">
-    <i></i><i></i><i></i><i></i><i></i><i></i><i></i><i></i><i></i><i></i>
-  </div>
+<!-- ===== پس‌زمینه‌ی محیطی: حالت ساده (Calm) یا پس‌زمینه دلخواه — پشت نقشه و بانک فراوانی ===== -->
+<div id="ambient-bg" aria-hidden="true">
+  <div id="ambient-bg-img"></div>
 </div>
 
 <svg id="stage" xmlns="http://www.w3.org/2000/svg">
@@ -1751,33 +1698,26 @@ body.bg-mode-focus #grat-root{background:transparent;}
         <button type="button" class="bgmode-btn active" id="bgmode-calm-btn" data-mode="calm">
           <span class="bgmode-icon">◻️</span><span>ساده (Calm)</span>
         </button>
-        <button type="button" class="bgmode-btn" id="bgmode-focus-btn" data-mode="focus">
-          <span class="bgmode-icon">🌀</span><span>تمرکز / Self-Hypnosis</span>
+        <button type="button" class="bgmode-btn" id="bgmode-image-btn" data-mode="image">
+          <span class="bgmode-icon">🖼️</span><span>پس‌زمینه دلخواه</span>
         </button>
       </div>
     </div>
 
-    <div class="field" id="bgmode-focus-options" style="display:none;">
-      <label>الگوی بصری</label>
-      <div class="bgpattern-row">
-        <button type="button" class="bgpattern-btn active" data-pattern="concentric">دایره‌های متحدالمرکز</button>
-        <button type="button" class="bgpattern-btn" data-pattern="spiral">مارپیچ نرم</button>
-        <button type="button" class="bgpattern-btn" data-pattern="waves">موج‌های آرام</button>
-        <button type="button" class="bgpattern-btn" data-pattern="particles">ذرات آهسته</button>
+    <div class="field" id="bgmode-image-options" style="display:none;">
+      <label>تصویر پس‌زمینه</label>
+      <div class="bgimg-upload-row">
+        <img id="bgimg-preview" class="bgimg-preview" style="display:none;" alt="پیش‌نمایش پس‌زمینه">
+        <label class="bgimg-upload-label" for="bgmode-image-input">انتخاب تصویر…</label>
+        <input type="file" id="bgmode-image-input" accept=".jpg,.jpeg,.png,.gif,image/jpeg,image/png,image/gif" style="display:none;">
+        <button type="button" class="bgimg-remove-btn" id="bgimg-remove-btn" style="display:none;">حذف تصویر</button>
       </div>
 
-      <label style="margin-top:12px;display:flex;align-items:center;gap:8px;cursor:pointer;">
-        <input type="checkbox" id="bgmode-animate-toggle" checked style="width:18px;height:18px;">
-        <span>حرکت پس‌زمینه فعال باشد</span>
-      </label>
+      <label style="margin-top:12px;">محو بودن پس‌زمینه (Blur)</label>
+      <input type="range" id="bgmode-blur" min="0" max="20" value="0">
 
-      <label style="margin-top:10px;">شدت حرکت / opacity</label>
-      <input type="range" id="bgmode-opacity" min="10" max="60" value="28">
-
-      <p class="bg-sci-note">
-        الگوهای متحرک می‌توانند به تمرکز توجه کمک کنند. در پژوهش‌های هیپنوتیزم، اثر اصلی بیشتر به توجه و پیشنهاد ذهنی مربوط است؛ خودِ تصویر به‌تنهایی تضمین نمی‌کند که باور تغییر کند.
-        <a href="https://www.nature.com/articles/nrn3538" target="_blank" rel="noopener noreferrer">منبع علمی</a>
-      </p>
+      <label style="margin-top:10px;">شفافیت پس‌زمینه</label>
+      <input type="range" id="bgmode-opacity" min="10" max="100" value="50">
     </div>
 
     <div class="modal-actions">
@@ -4582,13 +4522,20 @@ body.bg-mode-focus #grat-root{background:transparent;}
 
       <div class="dp-step">
         <div class="dp-step-head"><span class="dp-step-num">۱</span><span class="dp-step-title">Nothing — هیچ‌شدن</span></div>
-        <div class="dp-bullets">
-          <span>No body</span><span>No one</span><span>No thing</span><span>No where</span><span>No time</span>
+        <p class="bf-desc" style="margin-right:36px;">دیسپنزا توضیح می‌دهد که در این مرحله توجه از بدن، آدم‌ها، اشیا، مکان و زمان برداشته می‌شود و فرد روی «nothing» یا فضای خالی متمرکز می‌شود. بعد از هیچ شدن، در مدل تمرین دیسپنزا، مرحله‌ی مهم بعدی این است که از آن حالتِ بدون بدن/هویت/زمان/مکان، وارد خلق تجربه‌ی جدید شوی.</p>
+        <div class="dp-bullet-list">
+          <div class="dp-bullet-row"><b>No body</b><span>→ از توجه به بدن فاصله بگیر</span></div>
+          <div class="dp-bullet-row"><b>No one</b><span>→ از هویت و نقش‌های خودت فاصله بگیر</span></div>
+          <div class="dp-bullet-row"><b>No thing</b><span>→ از اشیا و دنیای مادی فاصله بگیر</span></div>
+          <div class="dp-bullet-row"><b>No where</b><span>→ از مکان فاصله بگیر</span></div>
+          <div class="dp-bullet-row"><b>No time</b><span>→ از گذشته و آینده‌ی خطی فاصله بگیر</span></div>
         </div>
+        <div class="dp-final-line">و در نهایت: Pure consciousness / awareness</div>
       </div>
 
       <div class="dp-step">
         <div class="dp-step-head"><span class="dp-step-num">۲</span><span class="dp-step-title">New Possibility — سیستم رادار</span></div>
+        <p class="bf-desc" style="margin-right:36px;">توجهت را به همان چیزی که می‌خوای جلب کن.</p>
         <div class="ras-input-row">
           <textarea id="b-tracking" rows="1"></textarea>
           <button class="ras-add-btn" onclick="addTrackingItem()">+</button>
@@ -4622,23 +4569,6 @@ body.bg-mode-focus #grat-root{background:transparent;}
     </div>
 
     <div class="belief-flow-card">
-      <div class="bf-head">🔎 موارد و شواهدی که پیدا کردی</div>
-      <div class="evidence-counter">
-        <div><div class="ev-num" id="ev-count">۰</div><div class="ev-label">مورد امروز پیدا شد</div></div>
-        <button class="ev-add-btn" onclick="addEvidence()">+ ثبت مورد جدید</button>
-      </div>
-      <textarea id="b-evidence-note" rows="2" style="margin-top:10px;" placeholder="متن (اختیاری)"></textarea>
-    </div>
-
-    <div class="belief-flow-card">
-      <div class="bf-head">🔥 تقویت توجه</div>
-      <p class="bf-desc">اهرم توجه</p>
-      <input type="range" class="bf-range gold" id="b-attention-lever" min="0" max="100" value="50" oninput="updateBeliefField('attentionLever', this.value)">
-      <div class="lever-labels"><span>🔽 کم — توجه کمتر</span><span>زیاد — توجه بیشتر 🔼</span></div>
-      <div class="quote-box" style="margin-top:10px;">هرچه اهرم را بالاتر ببری، در طول روز بیشتر به دنبال شواهد مرتبط با ذهنیت جدیدت یا خواسته‌ات می‌گردی.</div>
-    </div>
-
-    <div class="belief-flow-card">
       <div class="bf-head">✨ تصویرسازی</div>
       <p class="bf-desc">خودت را در حالی ببین که به خواسته‌ات رسیده‌ای. صحنه را ببین. احساسش را حس کن. چند لحظه در آن بمان... و رها کن.</p>
       <textarea id="b-visual-note" rows="2" placeholder="📝 یادداشت من (اختیاری)" oninput="updateBeliefField('visualNote', this.value)"></textarea>
@@ -4651,15 +4581,6 @@ body.bg-mode-focus #grat-root{background:transparent;}
       <div class="neural-card" id="np-visual-mount"></div>
     </div>
 
-    <div class="section-label"><h2>🔥 ردیاب پیوستگی</h2></div>
-    <div class="streak-box">
-      <div>
-        <div class="snum2" id="b-streak">۰</div>
-        <div class="slabel">روز پیاپی</div>
-      </div>
-      <button class="today-btn2" id="today-btn2" onclick="toggleToday()">✨ انجام دادم</button>
-    </div>
-    <div class="streak-history" id="streak-history"></div>
   </section>
 
   <!-- toast -->
@@ -5776,22 +5697,6 @@ function renderTrackingState(){
   btn.classList.toggle('active', active);
   radar.classList.toggle('spin', active);
 }
-function todayEvidenceKey(){ return todayKey(); }
-function addEvidence(){
-  const noteEl = document.getElementById('b-evidence-note');
-  const note = noteEl.value.trim();
-  if(!state.evidenceLog) state.evidenceLog = [];
-  state.evidenceLog.push({ id: Date.now()+Math.random(), date: todayEvidenceKey(), note });
-  saveState();
-  noteEl.value = '';
-  renderEvidence();
-  toast('مورد جدید ثبت شد 🔎');
-}
-function renderEvidence(){
-  const count = (state.evidenceLog||[]).filter(e=>e.date===todayEvidenceKey()).length;
-  document.getElementById('ev-count').textContent = count.toLocaleString('fa-IR');
-}
-
 /* ---------------- practice streak ---------------- */
 function todayKey(){ const d=new Date(); return d.getFullYear()+'-'+(d.getMonth()+1)+'-'+d.getDate(); }
 function dayKeyOffset(off){ const d=new Date(); d.setDate(d.getDate()+off); return d.getFullYear()+'-'+(d.getMonth()+1)+'-'+d.getDate(); }
@@ -6020,6 +5925,20 @@ function isBeliefConfirmedForKey(dayKey){
   const dk = dayKeyFromDate(ndKeyToDate(dayKey));
   return (state.futureReadDays||[]).includes(dk);
 }
+// ردیابی (سیستم رادار) و تصویرسازی هم حالا به تقویم واقعی وصل‌ان: تاییدشون با
+// خودِ آیتم‌های واقعی ثبت‌شده (نه یک دکمه‌ی جدا) انجام می‌شه. چون id هر آیتم
+// Date.now()+Math.random() ساخته می‌شه، Math.floor(id) همون timestamp واقعی
+// لحظه‌ی ثبتشه — از همونجا روز رو استخراج می‌کنیم.
+function isTrackingConfirmedForKey(dayKey){
+  const dk = dayKeyFromDate(ndKeyToDate(dayKey));
+  const items = (state.currentBelief && state.currentBelief.trackingItems) || [];
+  return items.some(function(it){ return dayKeyFromDate(new Date(Math.floor(it.id))) === dk; });
+}
+function isVisualConfirmedForKey(dayKey){
+  const dk = dayKeyFromDate(ndKeyToDate(dayKey));
+  const imgs = (state.currentBelief && state.currentBelief.visualImages) || [];
+  return imgs.some(function(im){ return dayKeyFromDate(new Date(Math.floor(im.id))) === dk; });
+}
 // بازی فراوانی (واریز روزانه + خرید از فروشگاه) کاملاً به تقویم خریدهای واقعی
 // (state.history) وصله؛ هر روزی که توش خریدی ثبت شده باشه، خودکار «انجام‌شده»
 // علامت می‌خوره — نیازی به دکمه‌ی دستی نداره، چون منبع حقیقتش خودِ خریدهاست.
@@ -6058,10 +5977,23 @@ function renderAllNeuralPathways(){
     });
   }
   if(document.getElementById('np-tracking-mount')){
-    renderNeuralPathway('np-tracking-mount', ensureTrackingNeural(), {label:'ردیابی RAS', onChange: saveState});
+    // «امروز انجام دادم» فقط وقتی تایید می‌شه که همون روز واقعاً یک مورد ردیابی
+    // ثبت شده باشه؛ وگرنه رشته تا یک ساعت دیگه خودکار پاک می‌شه.
+    renderNeuralPathway('np-tracking-mount', ensureTrackingNeural(), {
+      label:'ردیابی RAS',
+      calendarLinked: true,
+      isConfirmed: isTrackingConfirmedForKey,
+      onChange: saveState
+    });
   }
   if(document.getElementById('np-visual-mount')){
-    renderNeuralPathway('np-visual-mount', ensureVisualNeural(), {label:'تصویرسازی', onChange: saveState});
+    // همین‌طور تصویرسازی: تایید فقط با افزودن واقعی یک عکس در همون روز انجام می‌گیره.
+    renderNeuralPathway('np-visual-mount', ensureVisualNeural(), {
+      label:'تصویرسازی',
+      calendarLinked: true,
+      isConfirmed: isVisualConfirmedForKey,
+      onChange: saveState
+    });
   }
 }
 function renderShopNeural(){
@@ -6069,71 +6001,14 @@ function renderShopNeural(){
   syncShopNeuralFromHistory();
   renderNeuralPathway('np-shop-mount', ensureShopNeural(), {label:'بازی فراوانی', onChange: saveState, showDayButtons:false});
 }
-function toggleToday(){
-  const t = todayKey();
-  if(state.practiceLog.includes(t)){
-    state.practiceLog = state.practiceLog.filter(d=>d!==t);
-    state.streakHistory = (state.streakHistory||[]).filter(h=>h.dateKey!==t);
-    neuralMarkDay(ensureBeliefNeural(), t, true); // چون از قبل true بود، این پاکش می‌کنه
-  }else{
-    state.practiceLog.push(t);
-    if(!state.streakHistory) state.streakHistory = [];
-    const cb = state.currentBelief || defaultCurrentBelief();
-    const now = new Date();
-    state.streakHistory.push({
-      id: Date.now()+Math.random(),
-      dateKey: t,
-      dateLabel: now.toLocaleDateString('fa-IR'),
-      timeLabel: now.toLocaleTimeString('fa-IR', { hour:'2-digit', minute:'2-digit' }),
-      trackingItems: (cb.trackingItems||[]).map(it=>it.text)
-    });
-    const bn = ensureBeliefNeural();
-    if(bn.logs[t] !== true) neuralMarkDay(bn, t, true);
-    toast('امروز ثبت شد 🔥');
-  }
-  saveState();
-  renderStreak();
-  renderStreakHistory();
-  renderAllNeuralPathways();
-}
-function computeStreak(){
-  const set = new Set(state.practiceLog);
-  let streak = 0;
-  if(!set.has(todayKey()) && !set.has(dayKeyOffset(-1))) return 0;
-  let cursor = set.has(todayKey()) ? 0 : 1;
-  while(set.has(dayKeyOffset(-cursor))){ streak++; cursor++; }
-  return streak;
-}
-function renderStreak(){
-  const done = state.practiceLog.includes(todayKey());
-  const btn = document.getElementById('today-btn2');
-  btn.setAttribute('data-done', done?'true':'false');
-  btn.textContent = done ? 'امروز ثبت شد ✓' : '✨ انجام دادم';
-  document.getElementById('b-streak').textContent = computeStreak().toLocaleString('fa-IR');
-}
-function renderStreakHistory(){
-  const wrap = document.getElementById('streak-history');
-  const items = [...(state.streakHistory||[])].reverse();
-  if(items.length===0){ wrap.innerHTML = '<div class="sh-empty">هنوز روزی ثبت نشده.</div>'; return; }
-  wrap.innerHTML = items.map(h=>`
-    <div class="sh-item">
-      <div class="sh-time">${escapeHtmlSafe(h.dateLabel)} — ${escapeHtmlSafe(h.timeLabel)}</div>
-      ${h.trackingItems && h.trackingItems.length ? `<div class="sh-row sh-tracking"><b>ردیابی:</b> ${h.trackingItems.map(escapeHtmlSafe).join('، ')}</div>` : ''}
-    </div>
-  `).join('');
-}
 function renderBeliefsView(){
   if(!state.currentBelief) state.currentBelief = defaultCurrentBelief();
   const cb = state.currentBelief;
-  document.getElementById('b-attention-lever').value = cb.attentionLever;
   document.getElementById('b-visual-note').value = cb.visualNote || '';
   renderVisualGallery();
   renderMeditationAudio();
   renderTrackingList();
   renderTrackingState();
-  renderEvidence();
-  renderStreak();
-  renderStreakHistory();
   renderAllNeuralPathways();
   renderFutureUI();
   const sw = document.getElementById('alarm-switch');
@@ -6585,50 +6460,71 @@ updateCartBadge();
   applyIcon(document.documentElement.getAttribute('data-theme') || 'light');
 })();
 </script>
-<!-- ===== انتخاب پس‌زمینه: ساده (Calm) یا تمرکز/Self-Hypnosis — برای نقشه فرکانس و بانک فراوانی ===== -->
+<!-- ===== انتخاب پس‌زمینه: ساده (Calm) یا پس‌زمینه دلخواه — برای نقشه فرکانس و بانک فراوانی ===== -->
 <script>
 (function(){
   var KEY = 'appBackgroundMode';
-  var defaults = { mode:'calm', pattern:'concentric', animate:true, opacity:28 };
+  var IMG_KEY = 'appBackgroundImage';
+  var defaults = { mode:'calm', blur:0, opacity:50 };
+  var MAX_IMG_BYTES = 4 * 1024 * 1024; // 4MB
 
   function load(){
     try{
       var saved = JSON.parse(localStorage.getItem(KEY) || 'null');
-      var cfg = {}; 
+      var cfg = {};
       for (var k in defaults) cfg[k] = defaults[k];
       if (saved) for (var k2 in saved) cfg[k2] = saved[k2];
+      try{ cfg.imageData = localStorage.getItem(IMG_KEY) || null; }catch(e){ cfg.imageData = null; }
       return cfg;
     }catch(e){
       var cfg2 = {}; for (var k3 in defaults) cfg2[k3] = defaults[k3];
+      cfg2.imageData = null;
       return cfg2;
     }
   }
   function save(cfg){
-    try{ localStorage.setItem(KEY, JSON.stringify(cfg)); }catch(e){}
+    try{
+      localStorage.setItem(KEY, JSON.stringify({ mode:cfg.mode, blur:cfg.blur, opacity:cfg.opacity }));
+    }catch(e){}
+  }
+  function saveImage(dataUrl){
+    try{
+      if (dataUrl) localStorage.setItem(IMG_KEY, dataUrl);
+      else localStorage.removeItem(IMG_KEY);
+      return true;
+    }catch(e){
+      return false;
+    }
   }
 
   window.appBgConfig = load();
 
   function applyBg(cfg){
-    document.body.classList.toggle('bg-mode-focus', cfg.mode === 'focus');
-    document.body.classList.toggle('bg-anim-off', !cfg.animate);
-    var amb = document.getElementById('ambient-bg');
-    if (amb) amb.setAttribute('data-pattern', cfg.pattern);
+    var hasImage = !!cfg.imageData;
+    document.body.classList.toggle('bg-mode-image', cfg.mode === 'image' && hasImage);
     document.documentElement.style.setProperty('--amb-opacity', (cfg.opacity/100));
+    document.documentElement.style.setProperty('--amb-blur', cfg.blur + 'px');
+
+    var imgLayer = document.getElementById('ambient-bg-img');
+    if (imgLayer) imgLayer.style.backgroundImage = hasImage ? 'url(' + cfg.imageData + ')' : 'none';
 
     var calmBtn = document.getElementById('bgmode-calm-btn');
-    var focusBtn = document.getElementById('bgmode-focus-btn');
-    var focusOpts = document.getElementById('bgmode-focus-options');
+    var imageBtn = document.getElementById('bgmode-image-btn');
+    var imageOpts = document.getElementById('bgmode-image-options');
     if (calmBtn) calmBtn.classList.toggle('active', cfg.mode === 'calm');
-    if (focusBtn) focusBtn.classList.toggle('active', cfg.mode === 'focus');
-    if (focusOpts) focusOpts.style.display = (cfg.mode === 'focus') ? 'block' : 'none';
+    if (imageBtn) imageBtn.classList.toggle('active', cfg.mode === 'image');
+    if (imageOpts) imageOpts.style.display = (cfg.mode === 'image') ? 'block' : 'none';
 
-    var patternBtns = document.querySelectorAll('.bgpattern-btn');
-    for (var i=0; i<patternBtns.length; i++){
-      patternBtns[i].classList.toggle('active', patternBtns[i].getAttribute('data-pattern') === cfg.pattern);
+    var preview = document.getElementById('bgimg-preview');
+    var removeBtn = document.getElementById('bgimg-remove-btn');
+    if (preview){
+      if (hasImage){ preview.src = cfg.imageData; preview.style.display = 'block'; }
+      else { preview.style.display = 'none'; }
     }
-    var animCk = document.getElementById('bgmode-animate-toggle');
-    if (animCk) animCk.checked = !!cfg.animate;
+    if (removeBtn) removeBtn.style.display = hasImage ? 'inline-block' : 'none';
+
+    var blurRange = document.getElementById('bgmode-blur');
+    if (blurRange) blurRange.value = cfg.blur;
     var opRange = document.getElementById('bgmode-opacity');
     if (opRange) opRange.value = cfg.opacity;
   }
@@ -6643,27 +6539,55 @@ updateCartBadge();
 
   function wireUI(){
     var calmBtn = document.getElementById('bgmode-calm-btn');
-    var focusBtn = document.getElementById('bgmode-focus-btn');
+    var imageBtn = document.getElementById('bgmode-image-btn');
     if (calmBtn) calmBtn.addEventListener('click', function(){ window.setAppBgMode('calm'); });
-    if (focusBtn) focusBtn.addEventListener('click', function(){ window.setAppBgMode('focus'); });
+    if (imageBtn) imageBtn.addEventListener('click', function(){ window.setAppBgMode('image'); });
 
-    var patternBtns = document.querySelectorAll('.bgpattern-btn');
-    for (var i=0; i<patternBtns.length; i++){
-      patternBtns[i].addEventListener('click', function(){
-        window.appBgConfig.pattern = this.getAttribute('data-pattern');
+    var fileInput = document.getElementById('bgmode-image-input');
+    if (fileInput) fileInput.addEventListener('change', function(){
+      var file = fileInput.files && fileInput.files[0];
+      fileInput.value = '';
+      if (!file) return;
+      if (!/^image\/(jpeg|png|gif)$/.test(file.type)){
+        if (window.toast) toast('فقط فایل jpg، png یا gif مجاز است');
+        return;
+      }
+      if (file.size > MAX_IMG_BYTES){
+        if (window.toast) toast('حجم تصویر باید کمتر از ۴ مگابایت باشد');
+        return;
+      }
+      var reader = new FileReader();
+      reader.onload = function(){
+        var dataUrl = reader.result;
+        var ok = saveImage(dataUrl);
+        if (!ok){
+          if (window.toast) toast('ذخیره تصویر ممکن نشد (حجم زیاد است)');
+          return;
+        }
+        window.appBgConfig.imageData = dataUrl;
+        window.appBgConfig.mode = 'image';
         applyBg(window.appBgConfig);
         save(window.appBgConfig);
-      });
-    }
-    var animCk = document.getElementById('bgmode-animate-toggle');
-    if (animCk) animCk.addEventListener('change', function(){
-      window.appBgConfig.animate = animCk.checked;
+      };
+      reader.readAsDataURL(file);
+    });
+
+    var removeBtn = document.getElementById('bgimg-remove-btn');
+    if (removeBtn) removeBtn.addEventListener('click', function(){
+      saveImage(null);
+      window.appBgConfig.imageData = null;
+      applyBg(window.appBgConfig);
+    });
+
+    var blurRange = document.getElementById('bgmode-blur');
+    if (blurRange) blurRange.addEventListener('input', function(){
+      window.appBgConfig.blur = parseInt(blurRange.value, 10) || 0;
       applyBg(window.appBgConfig);
       save(window.appBgConfig);
     });
     var opRange = document.getElementById('bgmode-opacity');
     if (opRange) opRange.addEventListener('input', function(){
-      window.appBgConfig.opacity = parseInt(opRange.value, 10) || 28;
+      window.appBgConfig.opacity = parseInt(opRange.value, 10) || 50;
       applyBg(window.appBgConfig);
       save(window.appBgConfig);
     });
