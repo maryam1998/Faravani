@@ -1523,10 +1523,115 @@
   cursor:pointer; display:flex; align-items:center; justify-content:center; padding:0;
 }
 
+/* ===== ambient background system: ساده (Calm) vs تمرکز/Self-Hypnosis ===== */
+#ambient-bg{
+  position:fixed;inset:0;z-index:1;
+  pointer-events:none;overflow:hidden;
+  opacity:0;transition:opacity .7s ease;
+}
+body.bg-mode-focus #ambient-bg{opacity:var(--amb-opacity,.28);}
+/* هرگز نباید روی محتوا/دکمه‌ها غلبه کند: همیشه پشت stage و پنل‌ها می‌ماند */
+#ambient-bg .amb-layer{position:absolute;inset:-15%;display:none;}
+#ambient-bg[data-pattern="concentric"] .amb-concentric{display:block;}
+#ambient-bg[data-pattern="spiral"] .amb-spiral{display:block;}
+#ambient-bg[data-pattern="waves"] .amb-waves{display:block;}
+#ambient-bg[data-pattern="particles"] .amb-particles{display:block;}
+
+.amb-concentric{
+  background:repeating-radial-gradient(circle at 50% 50%, var(--accent) 0 1.5px, transparent 2px 84px);
+  transform-origin:50% 50%;
+  animation:amb-pulse 28s ease-in-out infinite;
+}
+@keyframes amb-pulse{
+  0%,100%{transform:scale(1);opacity:.55;}
+  50%{transform:scale(1.14);opacity:.85;}
+}
+
+.amb-spiral{
+  background:conic-gradient(from 0deg at 50% 50%,
+    transparent 0deg, var(--accent) 10deg, transparent 26deg,
+    transparent 178deg, var(--accent) 190deg, transparent 206deg, transparent 360deg);
+  filter:blur(42px);
+  animation:amb-spin 110s linear infinite;
+}
+@keyframes amb-spin{to{transform:rotate(360deg);}}
+
+.amb-waves{
+  background:
+    linear-gradient(120deg, transparent 38%, var(--accent) 50%, transparent 62%),
+    linear-gradient(210deg, transparent 38%, var(--accent) 50%, transparent 62%);
+  background-size:220% 220%;
+  filter:blur(70px);
+  opacity:.6;
+  animation:amb-wave 40s ease-in-out infinite;
+}
+@keyframes amb-wave{
+  0%,100%{background-position:0% 50%, 100% 50%;}
+  50%{background-position:100% 40%, 0% 60%;}
+}
+
+.amb-particles i{
+  position:absolute;top:110%;width:9px;height:9px;border-radius:50%;
+  background:var(--accent);filter:blur(5px);opacity:.7;
+  animation:amb-float linear infinite;
+}
+@keyframes amb-float{
+  0%{transform:translateY(0);}
+  100%{transform:translateY(-130vh);}
+}
+#ambient-bg .amb-particles i:nth-child(1){left:6%;animation-duration:52s;animation-delay:0s;}
+#ambient-bg .amb-particles i:nth-child(2){left:16%;animation-duration:63s;animation-delay:-8s;}
+#ambient-bg .amb-particles i:nth-child(3){left:27%;animation-duration:47s;animation-delay:-21s;}
+#ambient-bg .amb-particles i:nth-child(4){left:38%;animation-duration:70s;animation-delay:-4s;}
+#ambient-bg .amb-particles i:nth-child(5){left:49%;animation-duration:55s;animation-delay:-33s;}
+#ambient-bg .amb-particles i:nth-child(6){left:59%;animation-duration:60s;animation-delay:-14s;}
+#ambient-bg .amb-particles i:nth-child(7){left:69%;animation-duration:44s;animation-delay:-26s;}
+#ambient-bg .amb-particles i:nth-child(8){left:79%;animation-duration:66s;animation-delay:-2s;}
+#ambient-bg .amb-particles i:nth-child(9){left:89%;animation-duration:50s;animation-delay:-38s;}
+#ambient-bg .amb-particles i:nth-child(10){left:95%;animation-duration:58s;animation-delay:-19s;}
+
+body.bg-anim-off #ambient-bg .amb-layer,
+body.bg-anim-off #ambient-bg .amb-particles i{animation-play-state:paused !important;}
+@media (prefers-reduced-motion:reduce){
+  #ambient-bg .amb-layer,#ambient-bg .amb-particles i{animation-play-state:paused !important;}
+}
+/* در تب بانک فراوانی، پس‌زمینه‌ی متحرک فقط از حاشیه‌های بیرون کارت دیده می‌شود؛ کارت‌ها همچنان کاملاً خوانا و مات باقی می‌مانند */
+body.bg-mode-focus #grat-root{background:transparent;}
+
+/* کنترل‌های انتخاب پس‌زمینه در تنظیمات */
+.bgmode-row{display:flex;gap:8px;}
+.bgmode-btn{
+  flex:1;display:flex;flex-direction:column;align-items:center;gap:4px;
+  padding:10px 6px;border-radius:12px;cursor:pointer;
+  background:var(--input-bg);border:1px solid var(--panel-border);color:var(--text-dim);
+  font-family:inherit;font-size:11.5px;font-weight:600;
+}
+.bgmode-btn .bgmode-icon{font-size:17px;}
+.bgmode-btn.active{border-color:var(--accent);color:var(--text-main);background:rgba(244,197,66,0.12);}
+.bgpattern-row{display:flex;gap:6px;flex-wrap:wrap;}
+.bgpattern-btn{
+  padding:7px 10px;border-radius:10px;cursor:pointer;white-space:nowrap;
+  background:var(--input-bg);border:1px solid var(--panel-border);color:var(--text-dim);
+  font-family:inherit;font-size:11px;font-weight:500;
+}
+.bgpattern-btn.active{border-color:var(--accent);color:var(--text-main);background:rgba(244,197,66,0.12);}
+#bgmode-opacity{width:100%;}
+.bg-sci-note{margin:10px 0 0;font-size:11px;line-height:1.8;color:var(--text-dim);}
+.bg-sci-note a{color:var(--accent);text-decoration:none;font-weight:600;}
 
 </style>
 </head>
 <body>
+
+<!-- ===== پس‌زمینه‌ی محیطی: حالت ساده (Calm) یا تمرکز/Self-Hypnosis — پشت نقشه و بانک فراوانی ===== -->
+<div id="ambient-bg" data-pattern="concentric" aria-hidden="true">
+  <div class="amb-layer amb-concentric"></div>
+  <div class="amb-layer amb-spiral"></div>
+  <div class="amb-layer amb-waves"></div>
+  <div class="amb-layer amb-particles">
+    <i></i><i></i><i></i><i></i><i></i><i></i><i></i><i></i><i></i><i></i>
+  </div>
+</div>
 
 <svg id="stage" xmlns="http://www.w3.org/2000/svg">
   <defs>
@@ -1612,6 +1717,42 @@
         <span>نمایش تاریخ و ساعت ثبت هدف‌ها و شاخه‌ها روی صفحه اصلی</span>
       </label>
     </div>
+
+    <div class="field">
+      <label>پس‌زمینه</label>
+      <div class="bgmode-row">
+        <button type="button" class="bgmode-btn active" id="bgmode-calm-btn" data-mode="calm">
+          <span class="bgmode-icon">◻️</span><span>ساده (Calm)</span>
+        </button>
+        <button type="button" class="bgmode-btn" id="bgmode-focus-btn" data-mode="focus">
+          <span class="bgmode-icon">🌀</span><span>تمرکز / Self-Hypnosis</span>
+        </button>
+      </div>
+    </div>
+
+    <div class="field" id="bgmode-focus-options" style="display:none;">
+      <label>الگوی بصری</label>
+      <div class="bgpattern-row">
+        <button type="button" class="bgpattern-btn active" data-pattern="concentric">دایره‌های متحدالمرکز</button>
+        <button type="button" class="bgpattern-btn" data-pattern="spiral">مارپیچ نرم</button>
+        <button type="button" class="bgpattern-btn" data-pattern="waves">موج‌های آرام</button>
+        <button type="button" class="bgpattern-btn" data-pattern="particles">ذرات آهسته</button>
+      </div>
+
+      <label style="margin-top:12px;display:flex;align-items:center;gap:8px;cursor:pointer;">
+        <input type="checkbox" id="bgmode-animate-toggle" checked style="width:18px;height:18px;">
+        <span>حرکت پس‌زمینه فعال باشد</span>
+      </label>
+
+      <label style="margin-top:10px;">شدت حرکت / opacity</label>
+      <input type="range" id="bgmode-opacity" min="10" max="60" value="28">
+
+      <p class="bg-sci-note">
+        الگوهای متحرک می‌توانند به تمرکز توجه کمک کنند. در پژوهش‌های هیپنوتیزم، اثر اصلی بیشتر به توجه و پیشنهاد ذهنی مربوط است؛ خودِ تصویر به‌تنهایی تضمین نمی‌کند که باور تغییر کند.
+        <a href="https://www.nature.com/articles/nrn3538" target="_blank" rel="noopener noreferrer">منبع علمی</a>
+      </p>
+    </div>
+
     <div class="modal-actions">
       <button class="btn" id="settings-cancel-btn">انصراف</button>
       <button class="btn gold" id="settings-save-btn">ذخیره</button>
@@ -6343,6 +6484,96 @@ updateCartBadge();
     window.setAppTheme(current === 'dark' ? 'light' : 'dark');
   };
   applyIcon(document.documentElement.getAttribute('data-theme') || 'light');
+})();
+</script>
+<!-- ===== انتخاب پس‌زمینه: ساده (Calm) یا تمرکز/Self-Hypnosis — برای نقشه فرکانس و بانک فراوانی ===== -->
+<script>
+(function(){
+  var KEY = 'appBackgroundMode';
+  var defaults = { mode:'calm', pattern:'concentric', animate:true, opacity:28 };
+
+  function load(){
+    try{
+      var saved = JSON.parse(localStorage.getItem(KEY) || 'null');
+      var cfg = {}; 
+      for (var k in defaults) cfg[k] = defaults[k];
+      if (saved) for (var k2 in saved) cfg[k2] = saved[k2];
+      return cfg;
+    }catch(e){
+      var cfg2 = {}; for (var k3 in defaults) cfg2[k3] = defaults[k3];
+      return cfg2;
+    }
+  }
+  function save(cfg){
+    try{ localStorage.setItem(KEY, JSON.stringify(cfg)); }catch(e){}
+  }
+
+  window.appBgConfig = load();
+
+  function applyBg(cfg){
+    document.body.classList.toggle('bg-mode-focus', cfg.mode === 'focus');
+    document.body.classList.toggle('bg-anim-off', !cfg.animate);
+    var amb = document.getElementById('ambient-bg');
+    if (amb) amb.setAttribute('data-pattern', cfg.pattern);
+    document.documentElement.style.setProperty('--amb-opacity', (cfg.opacity/100));
+
+    var calmBtn = document.getElementById('bgmode-calm-btn');
+    var focusBtn = document.getElementById('bgmode-focus-btn');
+    var focusOpts = document.getElementById('bgmode-focus-options');
+    if (calmBtn) calmBtn.classList.toggle('active', cfg.mode === 'calm');
+    if (focusBtn) focusBtn.classList.toggle('active', cfg.mode === 'focus');
+    if (focusOpts) focusOpts.style.display = (cfg.mode === 'focus') ? 'block' : 'none';
+
+    var patternBtns = document.querySelectorAll('.bgpattern-btn');
+    for (var i=0; i<patternBtns.length; i++){
+      patternBtns[i].classList.toggle('active', patternBtns[i].getAttribute('data-pattern') === cfg.pattern);
+    }
+    var animCk = document.getElementById('bgmode-animate-toggle');
+    if (animCk) animCk.checked = !!cfg.animate;
+    var opRange = document.getElementById('bgmode-opacity');
+    if (opRange) opRange.value = cfg.opacity;
+  }
+
+  window.setAppBgMode = function(mode){
+    window.appBgConfig.mode = mode;
+    applyBg(window.appBgConfig);
+    save(window.appBgConfig);
+  };
+
+  applyBg(window.appBgConfig);
+
+  function wireUI(){
+    var calmBtn = document.getElementById('bgmode-calm-btn');
+    var focusBtn = document.getElementById('bgmode-focus-btn');
+    if (calmBtn) calmBtn.addEventListener('click', function(){ window.setAppBgMode('calm'); });
+    if (focusBtn) focusBtn.addEventListener('click', function(){ window.setAppBgMode('focus'); });
+
+    var patternBtns = document.querySelectorAll('.bgpattern-btn');
+    for (var i=0; i<patternBtns.length; i++){
+      patternBtns[i].addEventListener('click', function(){
+        window.appBgConfig.pattern = this.getAttribute('data-pattern');
+        applyBg(window.appBgConfig);
+        save(window.appBgConfig);
+      });
+    }
+    var animCk = document.getElementById('bgmode-animate-toggle');
+    if (animCk) animCk.addEventListener('change', function(){
+      window.appBgConfig.animate = animCk.checked;
+      applyBg(window.appBgConfig);
+      save(window.appBgConfig);
+    });
+    var opRange = document.getElementById('bgmode-opacity');
+    if (opRange) opRange.addEventListener('input', function(){
+      window.appBgConfig.opacity = parseInt(opRange.value, 10) || 28;
+      applyBg(window.appBgConfig);
+      save(window.appBgConfig);
+    });
+  }
+  if (document.readyState === 'loading'){
+    document.addEventListener('DOMContentLoaded', wireUI);
+  } else {
+    wireUI();
+  }
 })();
 </script>
 <script>
