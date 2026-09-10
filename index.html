@@ -1756,15 +1756,18 @@
   const DEFAULT_IMG_SIZE = 50;
 
   // اگه کاربر رنگ فونت رو دستی از تنظیمات عوض نکرده باشه (یعنی هنوز همون مقدار
-  // پیش‌فرضه)، رنگ فونت شاخه‌ها/زیرشاخه‌ها باید خودکار با تم روشن/تاریک هماهنگ
-  // باشه: تم روشن = مشکی، تم تاریک = سفید. اگه کاربر دستی رنگ دیگه‌ای انتخاب
-  // کرده باشه (از تنظیمات)، همون رنگ انتخابی همیشه استفاده می‌شه.
+  // پیش‌فرضه، یا مشکی/سفید خامیه که قبلاً به‌خاطر همین باگ ذخیره شده)، رنگ فونت
+  // شاخه‌ها/زیرشاخه‌ها باید خودکار با تم روشن/تاریک هماهنگ باشه: تم روشن = مشکی،
+  // تم تاریک = سفید. فقط اگه کاربر واقعاً یک رنگ دیگه (رنگی، نه مشکی/سفید خام)
+  // از تنظیمات انتخاب کرده باشه، همون رنگ انتخابی همیشه استفاده می‌شه.
+  const AUTO_TEXT_COLOR_MARKERS = [DEFAULT_TEXT_COLOR, '#ffffff', '#fff', '#000000', '#000'];
   function autoTextColor(){
     const theme = document.documentElement.getAttribute('data-theme') || 'light';
     return theme === 'light' ? '#000000' : '#ffffff';
   }
   function effectiveTextColor(){
-    if (!state.textColor || state.textColor === DEFAULT_TEXT_COLOR) return autoTextColor();
+    const c = (state.textColor || '').toLowerCase().trim();
+    if (!c || AUTO_TEXT_COLOR_MARKERS.includes(c)) return autoTextColor();
     return state.textColor;
   }
 
@@ -2923,9 +2926,7 @@
     out += text;
 
     if (action.showNeuralOnMap){
-      const totalTspanCount = lines.length + (stamp ? 1 : 0);
-      const neuralY = labelYBase + 16*(totalTspanCount) + 8;
-      out += neuralIndicatorSVG(action, goal.id, labelX, neuralY, anchor, color);
+      out += neuralIndicatorSVG(action, goal.id, end.x, end.y, handleR, color);
     }
 
     return out;
@@ -3787,19 +3788,21 @@
     return html;
   }
 
-  // یک تیک کوچیک کنار نام شاخه/زیرشاخه، فقط وقتی «نمایش این مسیر عصبی روی نقشه‌ی
-  // اصلی» توی پنل ویرایش شاخه تیک خورده باشه. اگه رشته‌ای ساخته شده باشه یا عادت
+  // یک تیک کوچیک کنار خودِ نقطه‌ی شاخه/زیرشاخه (نه وابسته به چیدمانِ متن لیبل، که
+  // ممکنه جاش عوض بشه)، فقط وقتی «این مسیر عصبی روی نقشه‌ی اصلی نشان داده شود»
+  // توی پنل ویرایش شاخه تیک خورده باشه. اگه رشته‌ای ساخته شده باشه یا عادت
   // جاافتاده باشه، پر و با ✓ نشون داده می‌شه؛ با لمس/کلیک، همون پنل ویرایش شاخه
   // (که شامل کارت کامل مسیر عصبیه) باز می‌شه.
-  function neuralIndicatorSVG(action, goalId, x, y, anchor, color){
+  function neuralIndicatorSVG(action, goalId, nodeX, nodeY, handleR, color){
     const nn = (action.neural && typeof action.neural === 'object') ? action.neural : null;
     const fiberCount = (nn && typeof neuralFiberCount === 'function') ? neuralFiberCount(nn.logs) : 0;
     const habitFormed = !!(nn && nn.habitFormed);
     const built = habitFormed || fiberCount > 0;
-    const cx = anchor === 'start' ? x - 13 : x + 13;
+    const cx = nodeX + handleR * 0.72;
+    const cy = nodeY - handleR * 0.72;
     let html = `<g class="neural-indicator-widget">`;
-    html += `<circle data-hit="action" data-goalid="${goalId}" data-id="${action.id}" cx="${cx}" cy="${y}" r="8" fill="${built ? color : 'transparent'}" stroke="${color}" stroke-width="1.4" style="cursor:pointer;pointer-events:all;"/>`;
-    if (built) html += `<text data-hit="action" data-goalid="${goalId}" data-id="${action.id}" x="${cx}" y="${y+3}" text-anchor="middle" font-size="9" fill="#12142a" style="pointer-events:none;">✓</text>`;
+    html += `<circle data-hit="action" data-goalid="${goalId}" data-id="${action.id}" cx="${cx}" cy="${cy}" r="10" fill="${built ? color : 'var(--input-bg, #12142a)'}" stroke="${color}" stroke-width="1.6" style="cursor:pointer;pointer-events:all;"/>`;
+    html += `<text data-hit="action" data-goalid="${goalId}" data-id="${action.id}" x="${cx}" y="${cy+3.5}" text-anchor="middle" font-size="11" fill="${built ? '#12142a' : color}" style="pointer-events:none;">🧬</text>`;
     html += `</g>`;
     return html;
   }
@@ -5679,14 +5682,20 @@ function renderNeuralPathway(mountId, container, opts){
   if((changed || cleaned) && typeof opts.onChange === 'function') opts.onChange();
   const fiberCount = neuralFiberCount(container.logs);
   const habitFormed = !!container.habitFormed;
-  const cappedFiberCount = Math.min(NEURAL_FIBER_CAP, fiberCount);
-  const drawnFibers = habitFormed ? NEURAL_FIBER_CAP : cappedFiberCount;
+  // رشته‌ها دیگه به ۱۰ تا محدود نمی‌شن — دقیقاً به تعداد واقعی رشته‌های ساخته‌شده
+  // رسم می‌شن (نامحدود)؛ فقط برای اینکه با تعداد زیاد از کادر بیرون نزنن، فاصله‌ی
+  // پخش‌شدنشون از یه حدی به بعد دوباره از اول تکرار می‌شه (چرخشی)، و چون تعدادشون
+  // زیاد می‌شه، نازک‌تر و کم‌رنگ‌تر رسم می‌شن تا روی هم انباشته بشن (حس ضخیم‌ترشدنِ
+  // مسیر عصبی رو بدن) نه اینکه از کادر بزنن بیرون.
+  const drawnFibers = fiberCount;
+  const SPREAD_CYCLE = 9;
   let fibersSvg = '';
   for(let i=0;i<drawnFibers;i++){
-    const mag = 3+6*Math.floor(i/2);
+    const pairIdx = Math.floor(i/2) % SPREAD_CYCLE;
+    const mag = 3+6*pairIdx;
     const off = (i%2===0 ? -1 : 1) * mag;
     const sY = 90+off*0.4, mY = 90+off, eY = 90+off*0.4;
-    fibersSvg += '<path class="np-fiber" d="M71 '+sY+' Q190 '+mY+' 309 '+eY+'" fill="none" stroke="var(--accent)" stroke-width="2" stroke-linecap="round" opacity="0.9"/>';
+    fibersSvg += '<path class="np-fiber" d="M71 '+sY+' Q190 '+mY+' 309 '+eY+'" fill="none" stroke="var(--accent)" stroke-width="1" stroke-linecap="round" opacity="0.55"/>';
   }
   const nodeStrong = habitFormed || fiberCount>=NEURAL_FIBER_CAP;
   const nodeMid = habitFormed || fiberCount>=Math.ceil(NEURAL_FIBER_CAP/3);
