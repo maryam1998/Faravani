@@ -1708,6 +1708,10 @@
       <span>این یه کار روتینه که باید مرتب انجامش بدم</span>
     </label>
     <div class="section-label" style="margin:12px 0 6px;"><h2 style="font-size:13px;margin:0;">🧬 مسیر عصبی این شاخه</h2></div>
+    <label class="small" style="display:flex;align-items:center;gap:8px;cursor:pointer;margin-bottom:8px;">
+      <input type="checkbox" id="panel-action-show-neural" style="width:16px;height:16px;">
+      <span>این مسیر عصبی روی نقشه‌ی اصلی نشان داده شود</span>
+    </label>
     <div class="neural-card" id="panel-action-neural-mount"></div>
     <button class="btn full panel-cal-btn" style="margin-top:10px;">📅 یادداشت روزانه‌ی این شاخه</button>
     <button class="btn full gold" id="panel-action-add-sub" style="margin-top:10px;">＋ زیرشاخه</button>
@@ -1751,6 +1755,19 @@
   const NODE_FILL = "#12142a";
   const DEFAULT_IMG_SIZE = 50;
 
+  // اگه کاربر رنگ فونت رو دستی از تنظیمات عوض نکرده باشه (یعنی هنوز همون مقدار
+  // پیش‌فرضه)، رنگ فونت شاخه‌ها/زیرشاخه‌ها باید خودکار با تم روشن/تاریک هماهنگ
+  // باشه: تم روشن = مشکی، تم تاریک = سفید. اگه کاربر دستی رنگ دیگه‌ای انتخاب
+  // کرده باشه (از تنظیمات)، همون رنگ انتخابی همیشه استفاده می‌شه.
+  function autoTextColor(){
+    const theme = document.documentElement.getAttribute('data-theme') || 'light';
+    return theme === 'light' ? '#000000' : '#ffffff';
+  }
+  function effectiveTextColor(){
+    if (!state.textColor || state.textColor === DEFAULT_TEXT_COLOR) return autoTextColor();
+    return state.textColor;
+  }
+
   let state = {
     me: { color:"#f4c542", note:"", x:0, y:0, radius:34, images:[] },
     goals: [],
@@ -1789,6 +1806,7 @@
       if (typeof a.labelSize !== 'number') a.labelSize = null;
       if (!a.logs || typeof a.logs !== 'object') a.logs = {};
       if (typeof a.isRoutine !== 'boolean') a.isRoutine = false;
+      if (typeof a.showNeuralOnMap !== 'boolean') a.showNeuralOnMap = false;
       if (typeof a.detached !== 'boolean') a.detached = false;
       if (a.detached) {
         if (typeof a.originX !== 'number') a.originX = 0;
@@ -2771,7 +2789,7 @@
       out += `<image x="${imgX}" y="${imgY}" width="${size}" height="${size}" href="${img.src}" preserveAspectRatio="xMidYMid meet" data-hit="${hitType}" data-id="${hitId}" data-goalid="${goalId || ''}" data-img="1" data-imgidx="${i}" style="cursor:pointer;"/>`;
     }
     if (images.length > 6) {
-      out += `<text x="${cx + radius * 0.5}" y="${cy + radius * 0.5 + 5}" text-anchor="middle" font-size="12" fill="${state.textColor || DEFAULT_TEXT_COLOR}" stroke="#0a0c18" stroke-width="2" paint-order="stroke">+${images.length-6}</text>`;
+      out += `<text x="${cx + radius * 0.5}" y="${cy + radius * 0.5 + 5}" text-anchor="middle" font-size="12" fill="${effectiveTextColor()}" stroke="#0a0c18" stroke-width="2" paint-order="stroke">+${images.length-6}</text>`;
     }
     return out;
   }
@@ -2784,7 +2802,7 @@
     const n = node || {};
     const labelX = cx + (n.labelDX || 0);
     const labelY = cy + (labelOffset || 6) + (n.labelDY || 0);
-    const textColor = state.textColor || DEFAULT_TEXT_COLOR;
+    const textColor = effectiveTextColor();
     const fillColor = (images && images.length) ? 'transparent' : NODE_FILL;
     const fs = n.labelSize || currentLabelSize(hitType, hitId);
     const stamp = (state.showDateStamps !== false) ? formatStamp(stampTs) : '';
@@ -2807,7 +2825,7 @@
     const labelY = cy - 16 * scale;
     const boxX = cx - boxW/2;
     const boxY = cy + 6 * scale;
-    const textColor = state.textColor || DEFAULT_TEXT_COLOR;
+    const textColor = effectiveTextColor();
     return `
       <g data-hit="feeling" data-id="${g.id}" style="cursor:pointer;">
         <text x="${cx}" y="${labelY}" text-anchor="middle" class="feeling-label" font-size="${fs}" fill="${textColor}" pointer-events="none">
@@ -2879,7 +2897,7 @@
           out += `<image x="${imgX}" y="${imgY}" width="${imgSize}" height="${imgSize}" href="${imgEntry.src}" preserveAspectRatio="xMidYMid meet" data-hit="action" data-goalid="${goal.id}" data-id="${action.id}" data-img="1" data-imgidx="${i}" style="cursor:pointer;"/>`;
         }
         if (action.images.length > 3) {
-          out += `<text x="${end.x + radius*0.7}" y="${end.y + radius*0.7 + 4}" text-anchor="middle" font-size="10" fill="${state.textColor || DEFAULT_TEXT_COLOR}" stroke="#0a0c18" stroke-width="2" paint-order="stroke">+${action.images.length-3}</text>`;
+          out += `<text x="${end.x + radius*0.7}" y="${end.y + radius*0.7 + 4}" text-anchor="middle" font-size="10" fill="${effectiveTextColor()}" stroke="#0a0c18" stroke-width="2" paint-order="stroke">+${action.images.length-3}</text>`;
         }
       } else {
         out += `<circle cx="${end.x}" cy="${end.y}" r="${radius}" fill="${color}"/>`;
@@ -2892,7 +2910,7 @@
     const labelX = end.x + (side>0 ? 8 : -8) + (action.labelDX || 0);
     const labelYBase = end.y + 4 + (action.labelDY || 0);
     const fsize = action.labelSize || currentLabelSize('action', action.id);
-    const textColor = state.textColor || DEFAULT_TEXT_COLOR;
+    const textColor = effectiveTextColor();
     let text = `<text data-hit="action" data-goalid="${goal.id}" data-id="${action.id}" data-label="1" x="${labelX}" y="${labelYBase}" text-anchor="${anchor}" class="branch-label" font-size="${(+fsize).toFixed(1)}" fill="${textColor}">`;
     lines.forEach((line,i)=>{
       text += `<tspan x="${labelX}" dy="${i===0?0:16}">${esc(line)}</tspan>`;
@@ -2904,10 +2922,10 @@
     text += `</text>`;
     out += text;
 
-    if (action.isRoutine){
+    if (action.showNeuralOnMap){
       const totalTspanCount = lines.length + (stamp ? 1 : 0);
-      const routineY = labelYBase + 16*(totalTspanCount) + 8;
-      out += routineWidgetSVG(action, labelX, routineY, anchor, color);
+      const neuralY = labelYBase + 16*(totalTspanCount) + 8;
+      out += neuralIndicatorSVG(action, goal.id, labelX, neuralY, anchor, color);
     }
 
     return out;
@@ -2921,7 +2939,7 @@
       html += `<g data-goal-branches="${g.id}">${branchesSVG(g)}</g>`;
     });
 
-    const textColor = state.textColor || DEFAULT_TEXT_COLOR;
+    const textColor = effectiveTextColor();
     const fs = Math.max(14, state.fontSize || 14);
 
     const mx = state.me.x, my = state.me.y;
@@ -3059,7 +3077,7 @@
   });
   
   document.getElementById('settings-btn').addEventListener('click', ()=>{
-    settingsTextColor.value = state.textColor || DEFAULT_TEXT_COLOR;
+    settingsTextColor.value = effectiveTextColor();
     settingsFontSize.value = state.fontSize || 14;
     settingsFontSizeVal.textContent = settingsFontSize.value;
     settingsShowDates.checked = state.showDateStamps !== false;
@@ -3197,6 +3215,7 @@
     panelActionWeight.value = action.weight || 5;
     panelActionWeightVal.textContent = toFa(action.weight || 5);
     document.getElementById('panel-action-routine').checked = !!action.isRoutine;
+    document.getElementById('panel-action-show-neural').checked = !!action.showNeuralOnMap;
     panelDeleteBtn.classList.remove('hidden');
     panelDeleteBtn.textContent = 'حذف شاخه';
     refreshActionChildrenPanel();
@@ -3588,6 +3607,7 @@
           found.node.weight = +panelActionWeight.value;
           found.node.images = images;
           found.node.isRoutine = document.getElementById('panel-action-routine').checked;
+          found.node.showNeuralOnMap = document.getElementById('panel-action-show-neural').checked;
         }
       }
     }
@@ -3764,6 +3784,23 @@
       html += `<rect data-routine-cell="${action.id}" data-key="${d.key}" x="${i*(cell+gap)}" y="0" width="${cell}" height="${cell}" rx="2" fill="${has?color:'rgba(255,255,255,0.10)'}" stroke="${isToday?color:'transparent'}" stroke-width="1" style="cursor:pointer;pointer-events:all;"/>`;
     });
     html += `</g></g>`;
+    return html;
+  }
+
+  // یک تیک کوچیک کنار نام شاخه/زیرشاخه، فقط وقتی «نمایش این مسیر عصبی روی نقشه‌ی
+  // اصلی» توی پنل ویرایش شاخه تیک خورده باشه. اگه رشته‌ای ساخته شده باشه یا عادت
+  // جاافتاده باشه، پر و با ✓ نشون داده می‌شه؛ با لمس/کلیک، همون پنل ویرایش شاخه
+  // (که شامل کارت کامل مسیر عصبیه) باز می‌شه.
+  function neuralIndicatorSVG(action, goalId, x, y, anchor, color){
+    const nn = (action.neural && typeof action.neural === 'object') ? action.neural : null;
+    const fiberCount = (nn && typeof neuralFiberCount === 'function') ? neuralFiberCount(nn.logs) : 0;
+    const habitFormed = !!(nn && nn.habitFormed);
+    const built = habitFormed || fiberCount > 0;
+    const cx = anchor === 'start' ? x - 13 : x + 13;
+    let html = `<g class="neural-indicator-widget">`;
+    html += `<circle data-hit="action" data-goalid="${goalId}" data-id="${action.id}" cx="${cx}" cy="${y}" r="8" fill="${built ? color : 'transparent'}" stroke="${color}" stroke-width="1.4" style="cursor:pointer;pointer-events:all;"/>`;
+    if (built) html += `<text data-hit="action" data-goalid="${goalId}" data-id="${action.id}" x="${cx}" y="${y+3}" text-anchor="middle" font-size="9" fill="#12142a" style="pointer-events:none;">✓</text>`;
+    html += `</g>`;
     return html;
   }
 
@@ -4031,6 +4068,10 @@
   // neuralCleanupPending/todayKey توش تعریف شدن) هم لود بشه، بعد اولین بار اجرا بشه.
   setTimeout(sweepAllBranchNeuralPending, 0);
   setInterval(sweepAllBranchNeuralPending, 5*60*1000);
+
+  // در دسترس قرار دادن render نقشه برای اسکریپت تعویض تم، تا با هر بار عوض
+  // شدن تم روشن/تاریک، رنگ فونت شاخه‌ها هم فوری آپدیت بشه.
+  window.frequencyMapRender = render;
 
   render();
 })();
@@ -5680,7 +5721,6 @@ function renderNeuralPathway(mountId, container, opts){
       '<text class="np-node-label" x="325" y="128" text-anchor="middle" font-size="12" fill="var(--text-dim)">عادت</text>'+
     '</svg>'+
     '<div class="np-stats-grid">'+
-      '<div class="np-stat-box"><div class="np-stat-label">از حداکثر</div><div class="np-stat-value">'+cappedFiberCount.toLocaleString('fa-IR')+' / '+NEURAL_FIBER_CAP.toLocaleString('fa-IR')+'</div></div>'+
       '<div class="np-stat-box"><div class="np-stat-label">رشته‌های ساخته‌شده</div><div class="np-stat-value">'+fiberCount.toLocaleString('fa-IR')+'</div></div>'+
     '</div>'+
     '<div class="np-status">'+status+'</div>'+
@@ -6261,6 +6301,8 @@ updateCartBadge();
     document.documentElement.setAttribute('data-theme', theme);
     try{ localStorage.setItem(THEME_KEY, theme); }catch(e){}
     applyIcon(theme);
+    // رنگ فونت شاخه‌ها/زیرشاخه‌ها روی نقشه رو هم با تم جدید هماهنگ کن
+    if (typeof window.frequencyMapRender === 'function') window.frequencyMapRender();
   };
   window.toggleAppTheme = function(){
     var current = document.documentElement.getAttribute('data-theme') || 'light';
