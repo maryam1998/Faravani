@@ -1403,12 +1403,10 @@
   }
 #grat-root .today-btn2[data-done="true"]{background:rgba(255,255,255,.25);}
 #grat-root .streak-history{margin:14px 18px 0;}
-.neural-card{margin:0 0 4px; background:var(--surface, var(--panel-bg)); border-radius:16px; padding:14px 14px 12px; border:1px solid var(--line, var(--panel-border));}
-#grat-root .neural-card{margin:0 18px 4px;}
-.neural-card .np-fiber{transition:stroke-dashoffset .7s ease, opacity .4s ease;}
-.neural-card .np-stats{display:flex; justify-content:space-between; font-size:12px; color:var(--muted, var(--text-dim)); margin-top:2px;}
-.neural-card .np-status{font-size:12.5px; color:var(--ink-soft, var(--text-main)); margin-top:6px; text-align:center; line-height:1.6;}
-.neural-card .np-habit-btn{width:100%;}
+#grat-root .neural-card{margin:0 18px 4px; background:var(--surface); border-radius:16px; padding:14px 14px 12px; border:1px solid var(--line);}
+#grat-root .neural-card .np-fiber{transition:stroke-dashoffset .7s ease, opacity .4s ease;}
+#grat-root .neural-card .np-stats{display:flex; justify-content:space-between; font-size:12px; color:var(--muted); margin-top:2px;}
+#grat-root .neural-card .np-status{font-size:12.5px; color:var(--ink-soft); margin-top:6px; text-align:center; line-height:1.6;}
 #grat-root .streak-history .sh-item{
   background:var(--surface); border:1px solid var(--line); border-radius:14px;
   padding:12px 14px; margin-bottom:10px;
@@ -1703,9 +1701,7 @@
       <input type="checkbox" id="panel-action-routine" style="width:16px;height:16px;">
       <span>این یه کار روتینه که باید مرتب انجامش بدم</span>
     </label>
-    <div class="section-label" style="margin:12px 0 6px;"><h2 style="font-size:13px;margin:0;">🧬 مسیر عصبی این شاخه</h2></div>
-    <div class="neural-card" id="panel-action-neural-mount"></div>
-    <button class="btn full panel-cal-btn" style="margin-top:10px;">📅 یادداشت روزانه‌ی این شاخه</button>
+    <button class="btn full panel-cal-btn" style="margin-top:10px;">📅 تقویم پیشرفت این شاخه</button>
     <button class="btn full gold" id="panel-action-add-sub" style="margin-top:10px;">＋ زیرشاخه</button>
     <div id="panel-action-children-list" style="margin-top:8px;"></div>
   </div>
@@ -3196,7 +3192,6 @@
     panelDeleteBtn.classList.remove('hidden');
     panelDeleteBtn.textContent = 'حذف شاخه';
     refreshActionChildrenPanel();
-    renderPanelActionNeural(action);
     panel.classList.add('open');
   }
 
@@ -3763,24 +3758,6 @@
     return html;
   }
 
-  /* هر شاخه/زیرشاخه یک مسیر عصبی مستقل خودش رو داره (node.neural)، جدا از
-     node.logs (که برای یادداشت متنی روزانه‌ست). ساختارش دقیقاً مثل
-     state.gratitudeNeural / state.currentBelief.neural هست تا با همون
-     renderNeuralPathway مشترک کار کنه. */
-  function ensureNodeNeural(node){
-    if (!node.neural || typeof node.neural !== 'object') node.neural = {logs:{}, lastSyncKey:null, habitFormed:false};
-    return node.neural;
-  }
-
-  function renderPanelActionNeural(node){
-    if (typeof renderNeuralPathway !== 'function') return;
-    if (!document.getElementById('panel-action-neural-mount')) return;
-    renderNeuralPathway('panel-action-neural-mount', ensureNodeNeural(node), {
-      label: node.text || 'این شاخه',
-      onChange: function(){ scheduleMapSave(); render(); }
-    });
-  }
-
   function findActionAnywhere(actionId){
     for (const g of state.goals){
       const found = findActionNode(g.actions, actionId);
@@ -3796,17 +3773,8 @@
     if (!node.logs || typeof node.logs !== 'object') node.logs = {};
     if (node.logs[key]) delete node.logs[key];
     else node.logs[key] = ROUTINE_DONE_MARK;
-    // مسیر عصبی این شاخه رو هم خودکار با همین کلیک همگام می‌کنه
-    const parts = key.split('-').map(Number);
-    if (parts.length===3 && !parts.some(isNaN)){
-      const g = toGregorianCal(parts[0], parts[1], parts[2]);
-      const gKey = g.gy+'-'+g.gm+'-'+g.gd;
-      const nn = ensureNodeNeural(node);
-      if (node.logs[key]) nn.logs[gKey] = true; else delete nn.logs[gKey];
-    }
     scheduleMapSave();
     render();
-    if (panelTarget && panelTarget.type==='action' && panelTarget.actionId===actionId) renderPanelActionNeural(node);
   }
 
   let calTarget = null;
@@ -3926,7 +3894,6 @@
         renderCalBody();
         const gForRefresh = state.goals.find(g=>g.id===currentPanelGoalId);
         if (gForRefresh) refreshActionsPanel(gForRefresh);
-        if (calTarget && calTarget.type==='action') renderPanelActionNeural(node);
       });
     } else if (calView === 'month'){
       navLabel.textContent = JALALI_MONTHS[calCursor.jm-1]+' '+toFa(calCursor.jy);
@@ -4589,11 +4556,9 @@ function loadState(){
       if(!s.currentBelief) s.currentBelief = defaultCurrentBelief();
       if(!s.currentBelief.trackingItems) s.currentBelief.trackingItems = [];
       if(!s.currentBelief.visualImages) s.currentBelief.visualImages = [];
-      if(!s.currentBelief.neural || typeof s.currentBelief.neural !== 'object') s.currentBelief.neural = {logs:{}, lastSyncKey:null, habitFormed: !!s.currentBelief.habitFormed};
       if(!s.evidenceLog) s.evidenceLog = [];
       if(!s.streakHistory) s.streakHistory = [];
       if(!s.practiceLog) s.practiceLog = [];
-      if(!s.gratitudeNeural || typeof s.gratitudeNeural !== 'object') s.gratitudeNeural = {logs:{}, lastSyncKey:null, habitFormed: !!s.gratitudeHabitFormed};
       if(!s.loginId) s.loginId = 'local-guest';
       if(typeof s.alarmEnabled !== 'boolean') s.alarmEnabled = false;
       if(!s.alarmTime) s.alarmTime = '20:00';
@@ -4611,10 +4576,10 @@ function loadState(){
     }
   }catch(e){}
   return { name:'', currency:'', startDate:'', history:[], gratitude:[], beliefs:[], currentBelief:defaultCurrentBelief(), evidenceLog:[], streakHistory:[], practiceLog:[], loginId:'local-guest', alarmEnabled:false, alarmTime:'20:00',
-    bankName:'بانک فراوانی', cardNumber:'5859 8312 8347 6690', cardExpiry:'∞ / ∞', cardCVV:'۱۴۰', cardTheme:'emerald', futureText:'', futureStartDate:null, futureReadDays:[], shareGratitude:false, authUserId:'', gratitudeNeural:{logs:{}, lastSyncKey:null, habitFormed:false} };
+    bankName:'بانک فراوانی', cardNumber:'5859 8312 8347 6690', cardExpiry:'∞ / ∞', cardCVV:'۱۴۰', cardTheme:'emerald', futureText:'', futureStartDate:null, futureReadDays:[], shareGratitude:false, authUserId:'' };
 }
 function defaultCurrentBelief(){
-  return { trackingItems:[], trackingActive:false, attentionLever:50, visualNote:'', visualImages:[], neural:{logs:{}, lastSyncKey:null, habitFormed:false} };
+  return { trackingItems:[], trackingActive:false, attentionLever:50, visualNote:'', visualImages:[] };
 }
 function saveState(){
   localStorage.setItem(STORAGE_KEY, JSON.stringify(state));
@@ -4965,7 +4930,7 @@ function renderHome(){
   document.getElementById('home-today-deposit').textContent = 'امروز '+formatMoney(todayDepositToman())+' به حسابت اضافه شد ✨';
   document.getElementById('home-day-tag').textContent = 'روز '+daysPassed().toLocaleString('fa-IR');
   renderThemeBanner();
-  renderAllNeuralPathways();
+  renderNeuralPathway('np-gratitude-mount', gratitudeDateKeys(), {label:'شکرگذاری', max:10});
 
   const homeShareBox = document.getElementById('home-grat-share');
   if(homeShareBox) homeShareBox.checked = !!state.shareGratitude;
@@ -5016,7 +4981,6 @@ function addGratitudeHome(){
   };
   state.gratitude.push(newEntry);
   state.shareGratitude = shared;
-  neuralMarkDay(ensureGratitudeNeural(), todayKey(), true);
   saveState();
   input.value='';
   autoGrowGratInput(input);
@@ -5267,12 +5231,11 @@ function addGratitude(){
   };
   state.gratitude.push(newEntry);
   state.shareGratitude = shared;
-  neuralMarkDay(ensureGratitudeNeural(), todayKey(), true);
   saveState();
   input.value='';
   autoGrowGratInput(input);
   renderHistory();
-  renderAllNeuralPathways();
+  renderNeuralPathway('np-gratitude-mount', gratitudeDateKeys(), {label:'شکرگذاری', max:10});
   toast(shared ? 'به لیست شکرگذاری اضافه و با دوستان به اشتراک گذاشته شد 🙏🌍' : 'به لیست شکرگذاری اضافه شد 🙏');
   if(shared) syncGratitudeShare(newEntry);
 }
@@ -5472,91 +5435,44 @@ function renderEvidence(){
 function todayKey(){ const d=new Date(); return d.getFullYear()+'-'+(d.getMonth()+1)+'-'+d.getDate(); }
 function dayKeyOffset(off){ const d=new Date(); d.setDate(d.getDate()+off); return d.getFullYear()+'-'+(d.getMonth()+1)+'-'+d.getDate(); }
 
-/* ---------------- مسیرهای عصبی: رشته‌های نازک بین دو نورون «رفتار» و «عادت» ----------------
-   هر روز دقیقاً یکی از این سه حالته:
-     true  = انجام شد        (دستی با دکمه، یا خودکار وقتی خودِ اقدام مربوطه ثبت بشه — مثلاً نوشتن شکرگذاری)
-     false = انجام نشد       (دستی با دکمه‌ی «یک روز گذشت، انجام ندادم»، یا خودکار وقتی یک روز
-                               بدون هیچ ثبتی بگذره و نرم‌افزار خودش موقع باز شدن تشخیص بده)
-     نامشخص = روزی که هنوز نگذشته
-   «رشته‌های ساخته‌شده» = (تعداد روزهای انجام‌شده − تعداد روزهای انجام‌نشده)، هیچ سقفی نداره،
-   فقط منفی نمی‌شه. هر روز موفق یک رشته اضافه می‌کنه، هر روز ناموفق یکی کم می‌کنه. */
-function ndKeyToDate(key){ const p=String(key).split('-').map(Number); return new Date(p[0], p[1]-1, p[2]); }
-function ndKeyNext(key){ const d=ndKeyToDate(key); d.setDate(d.getDate()+1); return d.getFullYear()+'-'+(d.getMonth()+1)+'-'+d.getDate(); }
-function neuralEnsureContainer(container){
-  if(!container.logs || typeof container.logs !== 'object') container.logs = {};
-  return container;
+/* ---------------- مسیرهای عصبی (خودکار، بر اساس تاریخ واقعی) ----------------
+   هر آرایه از تاریخ‌ها (دقیقاً با فرمت todayKey/dayKeyOffset) به یک "بسته‌ی
+   رشته‌ی عصبی" تبدیل می‌شه: هر روزی که پشت‌سرهم کاربر انجام داده یک رشته‌ی
+   نازک جدید هست، و به‌محض قطع‌شدن توالی روزها، آن رشته‌ها خودکار محو می‌شن.
+   هیچ دکمه‌ی دستی نداره — فقط از رویدادهایی که در تقویم واقعی ثبت شدن می‌خونه. */
+function computeDateStreak(dateKeys){
+  const set = new Set(dateKeys||[]);
+  const t = todayKey(), y = dayKeyOffset(-1);
+  if(!set.has(t) && !set.has(y)) return 0;
+  let cursor = set.has(t) ? 0 : 1;
+  let streak = 0;
+  while(set.has(dayKeyOffset(-cursor))){ streak++; cursor++; }
+  return streak;
 }
-function neuralFiberCount(logs){
-  let n = 0;
-  Object.keys(logs||{}).forEach(function(k){ if(logs[k]===true) n++; else if(logs[k]===false) n--; });
-  return Math.max(0, n);
-}
-// روزهایی که گذشتن ولی نه دستی ثبت شدن نه خودکار، رو همینجا به‌عنوان
-// «انجام نشد» علامت می‌زنه — اینجا تشخیص خودکار واقعی اتفاق می‌افته
-// (هر بار که کاربر برنامه رو باز می‌کنه و به این مسیر عصبی می‌رسه).
-function neuralAutoSync(container){
-  neuralEnsureContainer(container);
-  const yesterday = dayKeyOffset(-1);
-  if(!container.lastSyncKey){ container.lastSyncKey = yesterday; return false; }
-  if(container.lastSyncKey === yesterday) return false;
-  let cursor = container.lastSyncKey, changed = false, guard = 0;
-  while(cursor !== yesterday && guard < 3650){
-    cursor = ndKeyNext(cursor);
-    guard++;
-    if(!(cursor in container.logs)){ container.logs[cursor] = false; changed = true; }
-  }
-  container.lastSyncKey = yesterday;
-  return changed;
-}
-// یک روز رو دستی انجام‌شده/انجام‌نشده می‌کنه؛ زدن دوباره‌ی همون دکمه، ثبت اون روز رو پاک می‌کنه.
-function neuralMarkDay(container, key, done){
-  neuralEnsureContainer(container);
-  if(container.logs[key] === done) delete container.logs[key];
-  else container.logs[key] = done;
-}
-
-function renderNeuralPathway(mountId, container, opts){
+function renderNeuralPathway(mountId, dateKeys, opts){
   opts = opts || {};
+  const MAX = opts.max || 10;
   const label = opts.label || '';
   const mount = document.getElementById(mountId);
   if(!mount) return;
-  neuralEnsureContainer(container);
-  const changed = neuralAutoSync(container);
-  if(changed && typeof opts.onChange === 'function') opts.onChange();
-  const fiberCount = neuralFiberCount(container.logs);
-  const habitFormed = !!container.habitFormed;
-  const VISUAL_CAP = 14;
-  const drawnFibers = Math.min(VISUAL_CAP, habitFormed ? VISUAL_CAP : fiberCount);
+  const streak = computeDateStreak(dateKeys);
+  const fiberCount = Math.min(MAX, streak);
+  const offsets = [-3,3,-9,9,-15,15,-21,21,-27,27];
   let fibersSvg = '';
-  for(let i=0;i<drawnFibers;i++){
-    const mag = 3+6*Math.floor(i/2);
-    const off = (i%2===0 ? -1 : 1) * mag;
+  for(let i=0;i<fiberCount;i++){
+    const off = offsets[i];
     const sY = 90+off*0.4, mY = 90+off, eY = 90+off*0.4;
-    fibersSvg += '<path class="np-fiber" d="M71 '+sY+' Q190 '+mY+' 309 '+eY+'" fill="none" stroke="var(--accent)" stroke-width="2" stroke-linecap="round" opacity="0.9"/>';
+    fibersSvg += '<path class="np-fiber" d="M71 '+sY+' Q190 '+mY+' 309 '+eY+'" fill="none" stroke="var(--accent)" stroke-width="2" stroke-linecap="round" opacity="'+(fiberCount>=MAX?1:0.9)+'"/>';
   }
-  const nodeStrong = habitFormed || fiberCount>=30;
-  const nodeMid = habitFormed || fiberCount>=8;
-  const nodeFill = nodeStrong ? 'var(--accent)' : 'var(--input-bg)';
+  const nodeStrong = fiberCount>=Math.round(MAX*0.8);
+  const nodeMid = fiberCount>=Math.round(MAX*0.3);
+  const nodeFill = nodeStrong ? 'var(--accent)' : (nodeMid ? 'var(--input-bg)' : 'var(--input-bg)');
   const nodeStroke = nodeMid ? 'var(--accent)' : 'var(--panel-border)';
   let status;
-  if(habitFormed) status = '🎉 «'+label+'» یک مسیر عصبی ثابت و جاافتاده شده — همیشه همینجا می‌مونه، حتی اگه یک روزی جا بمونه.';
-  else if(fiberCount<=0) status = 'هنوز مسیر عصبی‌ای برای «'+label+'» شکل نگرفته — همین امروز انجامش بده.';
+  if(fiberCount<=0) status = 'هنوز مسیر عصبی‌ای برای «'+label+'» شکل نگرفته — همین امروز انجامش بده.';
   else if(!nodeMid) status = 'اولین رشته‌های عصبی «'+label+'» شکل گرفتن، ادامه بده.';
   else if(!nodeStrong) status = 'رشته‌های «'+label+'» دارن کنار هم جمع و ضخیم می‌شن.';
-  else status = '«'+label+'» یک مسیر عصبی محکم و جاافتاده شده — اگه حس می‌کنی واقعا عادت شده، می‌تونی قفلش کنی.';
-  const todayKeyStr = todayKey();
-  const todayState = container.logs[todayKeyStr];
-  const showDayBtns = opts.showDayButtons !== false;
-  const dayBtnsHtml = showDayBtns ?
-    ('<div class="np-day-btns" style="display:flex;gap:8px;margin-top:8px;">'+
-      '<button type="button" class="btn tiny np-day-yes" style="flex:1;'+(todayState===true?'opacity:0.55;':'')+'">'+(todayState===true?'امروز ثبت شد ✓':'✨ امروز انجام دادم')+'</button>'+
-      '<button type="button" class="btn tiny np-day-no" style="flex:1;'+(todayState===false?'opacity:0.55;':'')+'">'+(todayState===false?'ثبت شد: انجام نشد':'یک روز گذشت، انجام ندادم')+'</button>'+
-    '</div>') : '';
-  const showHabitBtn = fiberCount>0 || habitFormed;
-  const habitBtnHtml = showHabitBtn ?
-    ('<button type="button" class="btn tiny np-habit-btn" style="margin-top:8px;">'+
-      (habitFormed ? '↩️ هنوز کافی نیست، ادامه بده' : '✅ همینه، این عادت جاافتاد')+
-    '</button>') : '';
+  else status = '«'+label+'» یک مسیر عصبی محکم و جاافتاده شده.';
   mount.innerHTML =
     '<svg width="100%" viewBox="0 0 380 150" role="img" style="display:block;overflow:visible;">'+
       '<title>مسیر عصبی '+label+'</title>'+
@@ -5564,46 +5480,22 @@ function renderNeuralPathway(mountId, container, opts){
       '<circle cx="55" cy="90" r="15" fill="var(--input-bg)" stroke="var(--panel-border)" stroke-width="1"/>'+
       '<circle cx="325" cy="90" r="15" fill="'+nodeFill+'" stroke="'+nodeStroke+'" stroke-width="1"/>'+
     '</svg>'+
-    '<div class="np-stats"><span>'+fiberCount.toLocaleString('fa-IR')+' رشته ساخته‌شده</span></div>'+
-    '<div class="np-status">'+status+'</div>'+
-    dayBtnsHtml +
-    habitBtnHtml;
-  const rerender = function(){ renderNeuralPathway(mountId, container, opts); };
-  if(showDayBtns){
-    mount.querySelector('.np-day-yes').addEventListener('click', function(){
-      neuralMarkDay(container, todayKeyStr, true);
-      if(typeof opts.onChange === 'function') opts.onChange();
-      rerender();
-    });
-    mount.querySelector('.np-day-no').addEventListener('click', function(){
-      neuralMarkDay(container, todayKeyStr, false);
-      if(typeof opts.onChange === 'function') opts.onChange();
-      rerender();
-    });
-  }
-  if(showHabitBtn){
-    mount.querySelector('.np-habit-btn').addEventListener('click', function(){
-      container.habitFormed = !habitFormed;
-      if(typeof opts.onChange === 'function') opts.onChange();
-      rerender();
-    });
-  }
+    '<div class="np-stats"><span>'+fiberCount.toLocaleString('fa-IR')+' رشته از '+MAX.toLocaleString('fa-IR')+'</span><span>'+streak.toLocaleString('fa-IR')+' روز پیاپی</span></div>'+
+    '<div class="np-status">'+status+'</div>';
 }
-function ensureGratitudeNeural(){
-  if(!state.gratitudeNeural || typeof state.gratitudeNeural !== 'object') state.gratitudeNeural = {logs:{}, lastSyncKey:null, habitFormed:false};
-  return state.gratitudeNeural;
-}
-function ensureBeliefNeural(){
-  if(!state.currentBelief) state.currentBelief = defaultCurrentBelief();
-  if(!state.currentBelief.neural || typeof state.currentBelief.neural !== 'object') state.currentBelief.neural = {logs:{}, lastSyncKey:null, habitFormed:false};
-  return state.currentBelief.neural;
+function gratitudeDateKeys(){
+  return (state.gratitude||[]).map(function(e){
+    const d = e && e.iso ? new Date(e.iso) : null;
+    if(!d || isNaN(d.getTime())) return null;
+    return d.getFullYear()+'-'+(d.getMonth()+1)+'-'+d.getDate();
+  }).filter(Boolean);
 }
 function renderAllNeuralPathways(){
   if(document.getElementById('np-gratitude-mount')){
-    renderNeuralPathway('np-gratitude-mount', ensureGratitudeNeural(), {label:'شکرگذاری', onChange: saveState});
+    renderNeuralPathway('np-gratitude-mount', gratitudeDateKeys(), {label:'شکرگذاری', max:10});
   }
   if(document.getElementById('np-belief-mount')){
-    renderNeuralPathway('np-belief-mount', ensureBeliefNeural(), {label:'تمرین باب پراکتور', onChange: saveState});
+    renderNeuralPathway('np-belief-mount', state.practiceLog, {label:'تمرین باب پراکتور', max:10});
   }
 }
 function toggleToday(){
@@ -5611,7 +5503,6 @@ function toggleToday(){
   if(state.practiceLog.includes(t)){
     state.practiceLog = state.practiceLog.filter(d=>d!==t);
     state.streakHistory = (state.streakHistory||[]).filter(h=>h.dateKey!==t);
-    neuralMarkDay(ensureBeliefNeural(), t, true); // چون از قبل true بود، این پاکش می‌کنه
   }else{
     state.practiceLog.push(t);
     if(!state.streakHistory) state.streakHistory = [];
@@ -5624,14 +5515,12 @@ function toggleToday(){
       timeLabel: now.toLocaleTimeString('fa-IR', { hour:'2-digit', minute:'2-digit' }),
       trackingItems: (cb.trackingItems||[]).map(it=>it.text)
     });
-    const bn = ensureBeliefNeural();
-    if(bn.logs[t] !== true) neuralMarkDay(bn, t, true);
     toast('امروز ثبت شد 🔥');
   }
   saveState();
   renderStreak();
   renderStreakHistory();
-  renderAllNeuralPathways();
+  renderNeuralPathway('np-belief-mount', state.practiceLog, {label:'تمرین باب پراکتور', max:10});
 }
 function computeStreak(){
   const set = new Set(state.practiceLog);
@@ -5670,7 +5559,7 @@ function renderBeliefsView(){
   renderEvidence();
   renderStreak();
   renderStreakHistory();
-  renderAllNeuralPathways();
+  renderNeuralPathway('np-belief-mount', state.practiceLog, {label:'تمرین باب پراکتور', max:10});
   renderFutureUI();
   const sw = document.getElementById('alarm-switch');
   sw.classList.toggle('on', !!state.alarmEnabled);
