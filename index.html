@@ -1406,8 +1406,12 @@
 .neural-card{margin:0 0 4px; background:var(--surface, var(--panel-bg)); border-radius:16px; padding:14px 14px 12px; border:1px solid var(--line, var(--panel-border));}
 #grat-root .neural-card{margin:0 18px 4px;}
 .neural-card .np-fiber{transition:stroke-dashoffset .7s ease, opacity .4s ease;}
-.neural-card .np-stats{display:flex; justify-content:space-between; font-size:12px; color:var(--muted, var(--text-dim)); margin-top:2px;}
-.neural-card .np-status{font-size:12.5px; color:var(--ink-soft, var(--text-main)); margin-top:6px; text-align:center; line-height:1.6;}
+.neural-card .np-node-label{font-family:'Vazirmatn',Tahoma,sans-serif;}
+.neural-card .np-stats-grid{display:flex; gap:10px; margin-top:12px;}
+.neural-card .np-stat-box{flex:1; background:var(--surface-2, var(--input-bg)); border-radius:14px; padding:10px 8px; text-align:center;}
+.neural-card .np-stat-label{font-size:11.5px; color:var(--muted, var(--text-dim)); margin-bottom:4px;}
+.neural-card .np-stat-value{font-size:18px; font-weight:800; color:var(--ink, var(--text-main));}
+.neural-card .np-status{font-size:12.5px; color:var(--ink-soft, var(--text-main)); margin-top:10px; text-align:center; line-height:1.6;}
 .neural-card .np-habit-btn{width:100%;}
 #grat-root .streak-history .sh-item{
   background:var(--surface); border:1px solid var(--line); border-radius:14px;
@@ -5548,9 +5552,15 @@ function neuralCleanupPending(container, opts){
   if(!opts || !opts.calendarLinked) return false;
   let changed = false;
   Object.keys(container.pendingManual).forEach(function(key){
-    const ts = container.pendingManual[key];
+    const entry = container.pendingManual[key];
+    // فرمت قدیمی: pendingManual[dayKey] = timestamp عددی، و خودِ key همون dayKey بود.
+    // فرمت جدید: pendingManual[fiberKey] = {ts, dayKey}، چون هر کلیک یک رشته‌ی
+    // جدا و مستقل می‌سازه (نه فقط یکی در روز)، پس هر رشته باید مهلت یک‌ساعته‌ی خودش رو داشته باشه.
+    const isObj = entry && typeof entry === 'object';
+    const ts = isObj ? entry.ts : entry;
+    const dayKey = isObj ? entry.dayKey : key;
     if(Date.now() - ts < NEURAL_ONE_HOUR_MS) return;
-    const confirmed = typeof opts.isConfirmed === 'function' && opts.isConfirmed(key);
+    const confirmed = typeof opts.isConfirmed === 'function' && opts.isConfirmed(dayKey);
     if(confirmed){
       delete container.pendingManual[key];
     }else{
@@ -5565,6 +5575,29 @@ function neuralFiberCount(logs){
   let n = 0;
   Object.keys(logs||{}).forEach(function(k){ if(logs[k]===true) n++; else if(logs[k]===false) n--; });
   return Math.max(0, n);
+}
+// کلید یکتا برای هر رشته‌ی دستی — چون حالا هر کلیک (نامحدود در روز) باید رشته‌ی
+// جدای خودش رو بسازه/کم کنه، نه اینکه فقط یک بار در روز قابل ثبت باشه.
+function neuralFiberKey(){ return 'f'+Date.now()+'-'+Math.random().toString(36).slice(2,8); }
+// «امروز انجام دادم»: نامحدود، وابسته به تقویم نیست — هر بار کلیک دقیقاً یک
+// رشته‌ی جدید اضافه می‌کنه. اگه این مسیر عصبی به تقویم واقعی وصل باشه
+// (calendarLinked)، این رشته «در انتظار تایید» می‌مونه و اگه تا یک ساعت دیگه
+// با یک ثبت واقعی توی تقویم تایید نشه، خودکار حذف می‌شه.
+function neuralAddFiber(container, opts){
+  neuralEnsureContainer(container);
+  const key = neuralFiberKey();
+  container.logs[key] = true;
+  if(opts && opts.calendarLinked){
+    container.pendingManual[key] = { ts: Date.now(), dayKey: todayKey() };
+  }
+  return key;
+}
+// «یک روز گذشت، انجام ندادم»: این هم نامحدوده — هر کلیک دقیقاً یک رشته کم می‌کنه.
+function neuralRemoveFiber(container){
+  neuralEnsureContainer(container);
+  const key = neuralFiberKey();
+  container.logs[key] = false;
+  return key;
 }
 // روزهایی که گذشتن ولی نه دستی ثبت شدن نه خودکار، رو همینجا به‌عنوان
 // «انجام نشد» علامت می‌زنه — اینجا تشخیص خودکار واقعی اتفاق می‌افته
@@ -5590,6 +5623,10 @@ function neuralMarkDay(container, key, done){
   else container.logs[key] = done;
 }
 
+// حداکثری که هم برای شمارش «از حداکثر …» و هم برای سقفِ ترسیم بصریِ رشته‌ها
+// استفاده می‌شه (رشته‌های واقعی می‌تونن بیشتر از این باشن، ولی نمایش و درصد
+// روی همین سقف حساب می‌شه — دقیقاً مطابق طرح).
+const NEURAL_FIBER_CAP = 10;
 function renderNeuralPathway(mountId, container, opts){
   opts = opts || {};
   const label = opts.label || '';
@@ -5601,8 +5638,8 @@ function renderNeuralPathway(mountId, container, opts){
   if((changed || cleaned) && typeof opts.onChange === 'function') opts.onChange();
   const fiberCount = neuralFiberCount(container.logs);
   const habitFormed = !!container.habitFormed;
-  const VISUAL_CAP = 14;
-  const drawnFibers = Math.min(VISUAL_CAP, habitFormed ? VISUAL_CAP : fiberCount);
+  const cappedFiberCount = Math.min(NEURAL_FIBER_CAP, fiberCount);
+  const drawnFibers = habitFormed ? NEURAL_FIBER_CAP : cappedFiberCount;
   let fibersSvg = '';
   for(let i=0;i<drawnFibers;i++){
     const mag = 3+6*Math.floor(i/2);
@@ -5610,23 +5647,23 @@ function renderNeuralPathway(mountId, container, opts){
     const sY = 90+off*0.4, mY = 90+off, eY = 90+off*0.4;
     fibersSvg += '<path class="np-fiber" d="M71 '+sY+' Q190 '+mY+' 309 '+eY+'" fill="none" stroke="var(--accent)" stroke-width="2" stroke-linecap="round" opacity="0.9"/>';
   }
-  const nodeStrong = habitFormed || fiberCount>=30;
-  const nodeMid = habitFormed || fiberCount>=8;
-  const nodeFill = nodeStrong ? 'var(--accent)' : 'var(--input-bg)';
-  const nodeStroke = nodeMid ? 'var(--accent)' : 'var(--panel-border)';
+  const nodeStrong = habitFormed || fiberCount>=NEURAL_FIBER_CAP;
+  const nodeMid = habitFormed || fiberCount>=Math.ceil(NEURAL_FIBER_CAP/3);
+  const nodeFill = nodeStrong ? 'var(--emerald-100, #dcf3ee)' : 'var(--input-bg)';
+  const nodeStroke = nodeMid ? 'var(--emerald-500, #2bbfab)' : 'var(--panel-border)';
   let status;
-  if(habitFormed) status = '🎉 «'+label+'» یک مسیر عصبی ثابت و جاافتاده شده — همیشه همینجا می‌مونه، حتی اگه یک روزی جا بمونه.';
+  if(habitFormed) status = 'این عادت کاملا جاافتاده، یک رشته عصبی واقعی 🎉';
   else if(fiberCount<=0) status = 'هنوز مسیر عصبی‌ای برای «'+label+'» شکل نگرفته — همین امروز انجامش بده.';
   else if(!nodeMid) status = 'اولین رشته‌های عصبی «'+label+'» شکل گرفتن، ادامه بده.';
   else if(!nodeStrong) status = 'رشته‌های «'+label+'» دارن کنار هم جمع و ضخیم می‌شن.';
   else status = '«'+label+'» یک مسیر عصبی محکم و جاافتاده شده — اگه حس می‌کنی واقعا عادت شده، می‌تونی قفلش کنی.';
-  const todayKeyStr = todayKey();
-  const todayState = container.logs[todayKeyStr];
   const showDayBtns = opts.showDayButtons !== false;
+  // این دو دکمه دیگه به تقویم/تاریخ وابسته نیستن و هیچ سقفی ندارن: کاربر
+  // می‌تونه هرچندبار که بخواد کلیک کنه، هر کلیک دقیقاً یک رشته اضافه/کم می‌کنه.
   const dayBtnsHtml = showDayBtns ?
     ('<div class="np-day-btns" style="display:flex;gap:8px;margin-top:8px;">'+
-      '<button type="button" class="btn tiny np-day-yes" style="flex:1;'+(todayState===true?'opacity:0.55;':'')+'">'+(todayState===true?'امروز ثبت شد ✓':'✨ امروز انجام دادم')+'</button>'+
-      '<button type="button" class="btn tiny np-day-no" style="flex:1;'+(todayState===false?'opacity:0.55;':'')+'">'+(todayState===false?'ثبت شد: انجام نشد':'یک روز گذشت، انجام ندادم')+'</button>'+
+      '<button type="button" class="btn tiny np-day-yes" style="flex:1;">✨ امروز انجام دادم</button>'+
+      '<button type="button" class="btn tiny np-day-no" style="flex:1;">یک روز گذشت، انجام ندادم</button>'+
     '</div>') : '';
   const showHabitBtn = fiberCount>0 || habitFormed;
   const habitBtnHtml = showHabitBtn ?
@@ -5634,35 +5671,30 @@ function renderNeuralPathway(mountId, container, opts){
       (habitFormed ? '↩️ هنوز کافی نیست، ادامه بده' : '✅ همینه، این عادت جاافتاد')+
     '</button>') : '';
   mount.innerHTML =
-    '<svg width="100%" viewBox="0 0 380 150" role="img" style="display:block;overflow:visible;">'+
+    '<svg width="100%" viewBox="0 0 380 175" role="img" style="display:block;overflow:visible;">'+
       '<title>مسیر عصبی '+label+'</title>'+
       '<g>'+fibersSvg+'</g>'+
       '<circle cx="55" cy="90" r="15" fill="var(--input-bg)" stroke="var(--panel-border)" stroke-width="1"/>'+
-      '<circle cx="325" cy="90" r="15" fill="'+nodeFill+'" stroke="'+nodeStroke+'" stroke-width="1"/>'+
+      '<circle cx="325" cy="90" r="15" fill="'+nodeFill+'" stroke="'+nodeStroke+'" stroke-width="1.5"/>'+
+      '<text class="np-node-label" x="55" y="128" text-anchor="middle" font-size="12" fill="var(--text-dim)">رفتار</text>'+
+      '<text class="np-node-label" x="325" y="128" text-anchor="middle" font-size="12" fill="var(--text-dim)">عادت</text>'+
     '</svg>'+
-    '<div class="np-stats"><span>'+fiberCount.toLocaleString('fa-IR')+' رشته ساخته‌شده</span></div>'+
+    '<div class="np-stats-grid">'+
+      '<div class="np-stat-box"><div class="np-stat-label">از حداکثر</div><div class="np-stat-value">'+cappedFiberCount.toLocaleString('fa-IR')+' / '+NEURAL_FIBER_CAP.toLocaleString('fa-IR')+'</div></div>'+
+      '<div class="np-stat-box"><div class="np-stat-label">رشته‌های ساخته‌شده</div><div class="np-stat-value">'+fiberCount.toLocaleString('fa-IR')+'</div></div>'+
+    '</div>'+
     '<div class="np-status">'+status+'</div>'+
     dayBtnsHtml +
     habitBtnHtml;
   const rerender = function(){ renderNeuralPathway(mountId, container, opts); };
   if(showDayBtns){
     mount.querySelector('.np-day-yes').addEventListener('click', function(){
-      neuralMarkDay(container, todayKeyStr, true);
-      if(opts.calendarLinked){
-        if(container.logs[todayKeyStr] === true){
-          const confirmed = typeof opts.isConfirmed === 'function' && opts.isConfirmed(todayKeyStr);
-          if(confirmed) delete container.pendingManual[todayKeyStr];
-          else container.pendingManual[todayKeyStr] = Date.now();
-        }else{
-          delete container.pendingManual[todayKeyStr];
-        }
-      }
+      neuralAddFiber(container, opts);
       if(typeof opts.onChange === 'function') opts.onChange();
       rerender();
     });
     mount.querySelector('.np-day-no').addEventListener('click', function(){
-      neuralMarkDay(container, todayKeyStr, false);
-      if(opts.calendarLinked) delete container.pendingManual[todayKeyStr];
+      neuralRemoveFiber(container);
       if(typeof opts.onChange === 'function') opts.onChange();
       rerender();
     });
