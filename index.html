@@ -3777,6 +3777,15 @@
     if (!document.getElementById('panel-action-neural-mount')) return;
     renderNeuralPathway('panel-action-neural-mount', ensureNodeNeural(node), {
       label: node.text || 'این شاخه',
+      calendarLinked: true,
+      isConfirmed: function(key){
+        // آیا برای «امروز» توی تقویم همین شاخه/زیرشاخه یادداشت واقعی ثبت شده؟
+        if (key !== todayKey()) return false;
+        const today = new Date();
+        const jt = toJalaali(today.getFullYear(), today.getMonth()+1, today.getDate());
+        const jKey = calDKey(jt.jy, jt.jm, jt.jd);
+        return !!(node.logs && node.logs[jKey]);
+      },
       onChange: function(){ scheduleMapSave(); render(); }
     });
   }
@@ -3987,6 +3996,38 @@
   document.getElementById('cal-prev-btn').addEventListener('click', ()=> calNavStep(-1));
   document.getElementById('cal-next-btn').addEventListener('click', ()=> calNavStep(1));
 
+  // هر چند دقیقه (و یک‌بار موقع باز شدن برنامه) مسیرهای عصبیِ همه‌ی شاخه‌ها و
+  // زیرشاخه‌ها رو چک می‌کنه تا اگه یک ساعت از یک ثبتِ دستیِ تاییدنشده گذشته
+  // باشه، حذفش کنه — حتی اگه پنل اون شاخه باز نبوده باشه.
+  function sweepAllBranchNeuralPending(){
+    if (typeof neuralCleanupPending !== 'function' || typeof todayKey !== 'function') return;
+    let changed = false;
+    function walk(list){
+      (list||[]).forEach(function(node){
+        if (node.neural && typeof node.neural === 'object'){
+          const opts = {
+            calendarLinked: true,
+            isConfirmed: function(key){
+              if (key !== todayKey()) return false;
+              const today = new Date();
+              const jt = toJalaali(today.getFullYear(), today.getMonth()+1, today.getDate());
+              const jKey = calDKey(jt.jy, jt.jm, jt.jd);
+              return !!(node.logs && node.logs[jKey]);
+            }
+          };
+          if (neuralCleanupPending(node.neural, opts)) changed = true;
+        }
+        if (node.children && node.children.length) walk(node.children);
+      });
+    }
+    (state.goals||[]).forEach(function(g){ walk(g.actions); });
+    if (changed){ scheduleMapSave(); render(); }
+  }
+  // با setTimeout صفر صبر می‌کنیم تا اسکریپت بانک فراوانی (که توابع
+  // neuralCleanupPending/todayKey توش تعریف شدن) هم لود بشه، بعد اولین بار اجرا بشه.
+  setTimeout(sweepAllBranchNeuralPending, 0);
+  setInterval(sweepAllBranchNeuralPending, 5*60*1000);
+
   render();
 })();
 </script>
@@ -4092,7 +4133,9 @@
 
       <input id="custom-price" placeholder="مبلغ — مثلاً 300,000" inputmode="numeric" oninput="formatAmountInput(this)">
 
-      <button class="btn full" style="margin-bottom:10px;" onclick="openBankCalendar('shop')">📅 تقویم خریدها</button>
+      <button class="btn full" style="margin-bottom:10px;" onclick="openBankCalendar('shop')">📅 تقویم بازی فراوانی</button>
+      <div class="section-label" style="margin:10px 0 6px;"><h2 style="font-size:13px;margin:0;">🧬 مسیر عصبی بازی فراوانی</h2></div>
+      <div class="neural-card" id="np-shop-mount" style="margin-bottom:10px;"></div>
 
       <button class="submit secondary" onclick="addToPendingList()">➕ افزودن به لیست</button>
 
@@ -4330,6 +4373,9 @@
           <span class="radar-blip green" style="top:32%;left:75%; animation-delay:2.9s;"></span>
         </div>
       </div>
+      <button class="btn full" style="margin-top:10px;" onclick="openBankCalendar('tracking')">📅 تقویم ردیابی</button>
+      <div class="section-label" style="margin:12px 0 6px;"><h2 style="font-size:13px;margin:0;">🧬 مسیر عصبی ردیابی</h2></div>
+      <div class="neural-card" id="np-tracking-mount"></div>
     </div>
 
     <div class="belief-flow-card">
@@ -4590,10 +4636,12 @@ function loadState(){
       if(!s.currentBelief.trackingItems) s.currentBelief.trackingItems = [];
       if(!s.currentBelief.visualImages) s.currentBelief.visualImages = [];
       if(!s.currentBelief.neural || typeof s.currentBelief.neural !== 'object') s.currentBelief.neural = {logs:{}, lastSyncKey:null, habitFormed: !!s.currentBelief.habitFormed};
+      if(!s.currentBelief.trackingNeural || typeof s.currentBelief.trackingNeural !== 'object') s.currentBelief.trackingNeural = {logs:{}, lastSyncKey:null, habitFormed:false};
       if(!s.evidenceLog) s.evidenceLog = [];
       if(!s.streakHistory) s.streakHistory = [];
       if(!s.practiceLog) s.practiceLog = [];
       if(!s.gratitudeNeural || typeof s.gratitudeNeural !== 'object') s.gratitudeNeural = {logs:{}, lastSyncKey:null, habitFormed: !!s.gratitudeHabitFormed};
+      if(!s.shopNeural || typeof s.shopNeural !== 'object') s.shopNeural = {logs:{}, lastSyncKey:null, habitFormed:false};
       if(!s.loginId) s.loginId = 'local-guest';
       if(typeof s.alarmEnabled !== 'boolean') s.alarmEnabled = false;
       if(!s.alarmTime) s.alarmTime = '20:00';
@@ -4611,10 +4659,10 @@ function loadState(){
     }
   }catch(e){}
   return { name:'', currency:'', startDate:'', history:[], gratitude:[], beliefs:[], currentBelief:defaultCurrentBelief(), evidenceLog:[], streakHistory:[], practiceLog:[], loginId:'local-guest', alarmEnabled:false, alarmTime:'20:00',
-    bankName:'بانک فراوانی', cardNumber:'5859 8312 8347 6690', cardExpiry:'∞ / ∞', cardCVV:'۱۴۰', cardTheme:'emerald', futureText:'', futureStartDate:null, futureReadDays:[], shareGratitude:false, authUserId:'', gratitudeNeural:{logs:{}, lastSyncKey:null, habitFormed:false} };
+    bankName:'بانک فراوانی', cardNumber:'5859 8312 8347 6690', cardExpiry:'∞ / ∞', cardCVV:'۱۴۰', cardTheme:'emerald', futureText:'', futureStartDate:null, futureReadDays:[], shareGratitude:false, authUserId:'', gratitudeNeural:{logs:{}, lastSyncKey:null, habitFormed:false}, shopNeural:{logs:{}, lastSyncKey:null, habitFormed:false} };
 }
 function defaultCurrentBelief(){
-  return { trackingItems:[], trackingActive:false, attentionLever:50, visualNote:'', visualImages:[], neural:{logs:{}, lastSyncKey:null, habitFormed:false} };
+  return { trackingItems:[], trackingActive:false, attentionLever:50, visualNote:'', visualImages:[], neural:{logs:{}, lastSyncKey:null, habitFormed:false}, trackingNeural:{logs:{}, lastSyncKey:null, habitFormed:false} };
 }
 function saveState(){
   localStorage.setItem(STORAGE_KEY, JSON.stringify(state));
@@ -4834,7 +4882,7 @@ function goto(view){
   window.scrollTo(0,0);
   var __gr = document.getElementById('grat-root'); if (__gr) __gr.scrollTop = 0;
   if(view==='home') renderHome();
-  if(view==='store'){ renderPendingList(); renderCart(); }
+  if(view==='store'){ renderPendingList(); renderCart(); renderShopNeural(); }
   if(view==='pay') renderPay();
   if(view==='history') renderHistory();
   if(view==='beliefs') renderBeliefsView();
@@ -5208,6 +5256,7 @@ function processPayment(){
       total: cartTotal()
     };
     state.history.push(record);
+    syncShopNeuralFromHistory();
     record.items.forEach(it=>{
       state.gratitude.push({
         id: Date.now()+Math.random(),
@@ -5482,9 +5531,35 @@ function dayKeyOffset(off){ const d=new Date(); d.setDate(d.getDate()+off); retu
    فقط منفی نمی‌شه. هر روز موفق یک رشته اضافه می‌کنه، هر روز ناموفق یکی کم می‌کنه. */
 function ndKeyToDate(key){ const p=String(key).split('-').map(Number); return new Date(p[0], p[1]-1, p[2]); }
 function ndKeyNext(key){ const d=ndKeyToDate(key); d.setDate(d.getDate()+1); return d.getFullYear()+'-'+(d.getMonth()+1)+'-'+d.getDate(); }
+const NEURAL_ONE_HOUR_MS = 60*60*1000;
 function neuralEnsureContainer(container){
   if(!container.logs || typeof container.logs !== 'object') container.logs = {};
+  if(!container.pendingManual || typeof container.pendingManual !== 'object') container.pendingManual = {};
   return container;
+}
+// وقتی یک مسیر عصبی به یک تقویم واقعی وصله (calendarLinked)، اگه کاربر با دکمه‌ی
+// «امروز انجام دادم» یک روز رو دستی ثبت کنه ولی خودِ تقویم هنوز برای همون روز
+// چیزی واقعی نداشته باشه، احتمالاً اشتباهی زده. یک ساعت بهش فرصت می‌دیم تا با
+// ثبت واقعی توی تقویم تایید بشه؛ اگه نشد، خودکار پاکش می‌کنیم تا دوباره منتظر
+// روز بعد (یا ثبت واقعی) بمونه. مسیرهای کاملاً دستی (مثل شکرگذاری/باور/ردیابی)
+// اصلاً درگیر این محدودیت نمی‌شن و همیشه باز می‌مونن.
+function neuralCleanupPending(container, opts){
+  neuralEnsureContainer(container);
+  if(!opts || !opts.calendarLinked) return false;
+  let changed = false;
+  Object.keys(container.pendingManual).forEach(function(key){
+    const ts = container.pendingManual[key];
+    if(Date.now() - ts < NEURAL_ONE_HOUR_MS) return;
+    const confirmed = typeof opts.isConfirmed === 'function' && opts.isConfirmed(key);
+    if(confirmed){
+      delete container.pendingManual[key];
+    }else{
+      if(container.logs[key] === true) delete container.logs[key];
+      delete container.pendingManual[key];
+      changed = true;
+    }
+  });
+  return changed;
 }
 function neuralFiberCount(logs){
   let n = 0;
@@ -5522,7 +5597,8 @@ function renderNeuralPathway(mountId, container, opts){
   if(!mount) return;
   neuralEnsureContainer(container);
   const changed = neuralAutoSync(container);
-  if(changed && typeof opts.onChange === 'function') opts.onChange();
+  const cleaned = neuralCleanupPending(container, opts);
+  if((changed || cleaned) && typeof opts.onChange === 'function') opts.onChange();
   const fiberCount = neuralFiberCount(container.logs);
   const habitFormed = !!container.habitFormed;
   const VISUAL_CAP = 14;
@@ -5572,11 +5648,21 @@ function renderNeuralPathway(mountId, container, opts){
   if(showDayBtns){
     mount.querySelector('.np-day-yes').addEventListener('click', function(){
       neuralMarkDay(container, todayKeyStr, true);
+      if(opts.calendarLinked){
+        if(container.logs[todayKeyStr] === true){
+          const confirmed = typeof opts.isConfirmed === 'function' && opts.isConfirmed(todayKeyStr);
+          if(confirmed) delete container.pendingManual[todayKeyStr];
+          else container.pendingManual[todayKeyStr] = Date.now();
+        }else{
+          delete container.pendingManual[todayKeyStr];
+        }
+      }
       if(typeof opts.onChange === 'function') opts.onChange();
       rerender();
     });
     mount.querySelector('.np-day-no').addEventListener('click', function(){
       neuralMarkDay(container, todayKeyStr, false);
+      if(opts.calendarLinked) delete container.pendingManual[todayKeyStr];
       if(typeof opts.onChange === 'function') opts.onChange();
       rerender();
     });
@@ -5598,6 +5684,30 @@ function ensureBeliefNeural(){
   if(!state.currentBelief.neural || typeof state.currentBelief.neural !== 'object') state.currentBelief.neural = {logs:{}, lastSyncKey:null, habitFormed:false};
   return state.currentBelief.neural;
 }
+function ensureTrackingNeural(){
+  if(!state.currentBelief) state.currentBelief = defaultCurrentBelief();
+  if(!state.currentBelief.trackingNeural || typeof state.currentBelief.trackingNeural !== 'object') state.currentBelief.trackingNeural = {logs:{}, lastSyncKey:null, habitFormed:false};
+  return state.currentBelief.trackingNeural;
+}
+function ensureShopNeural(){
+  if(!state.shopNeural || typeof state.shopNeural !== 'object') state.shopNeural = {logs:{}, lastSyncKey:null, habitFormed:false};
+  return state.shopNeural;
+}
+// بازی فراوانی (واریز روزانه + خرید از فروشگاه) کاملاً به تقویم خریدهای واقعی
+// (state.history) وصله؛ هر روزی که توش خریدی ثبت شده باشه، خودکار «انجام‌شده»
+// علامت می‌خوره — نیازی به دکمه‌ی دستی نداره، چون منبع حقیقتش خودِ خریدهاست.
+function syncShopNeuralFromHistory(){
+  // مسیر عصبی از همون کلیدهای بدون صفرِ todayKey استفاده می‌کنه (نه فرمت صفردارِ
+  // تقویم)، برای همینجا مستقیم از iso می‌سازیمش تا با بقیه‌ی مسیرهای عصبی یکی باشه.
+  const sn = ensureShopNeural();
+  (state.history||[]).forEach(function(h){
+    if(!h.iso) return;
+    const d = new Date(h.iso);
+    const k = d.getFullYear()+'-'+(d.getMonth()+1)+'-'+d.getDate();
+    if(sn.logs[k] !== true) sn.logs[k] = true;
+  });
+  return sn;
+}
 function renderAllNeuralPathways(){
   if(document.getElementById('np-gratitude-mount')){
     renderNeuralPathway('np-gratitude-mount', ensureGratitudeNeural(), {label:'شکرگذاری', onChange: saveState});
@@ -5605,6 +5715,14 @@ function renderAllNeuralPathways(){
   if(document.getElementById('np-belief-mount')){
     renderNeuralPathway('np-belief-mount', ensureBeliefNeural(), {label:'تمرین باب پراکتور', onChange: saveState});
   }
+  if(document.getElementById('np-tracking-mount')){
+    renderNeuralPathway('np-tracking-mount', ensureTrackingNeural(), {label:'ردیابی RAS', onChange: saveState});
+  }
+}
+function renderShopNeural(){
+  if(!document.getElementById('np-shop-mount')) return;
+  syncShopNeuralFromHistory();
+  renderNeuralPathway('np-shop-mount', ensureShopNeural(), {label:'بازی فراوانی', onChange: saveState, showDayButtons:false});
 }
 function toggleToday(){
   const t = todayKey();
@@ -5738,7 +5856,7 @@ function openBankCalendar(kind){
   bankCalKind = kind;
   bankCalCursor = new Date();
   bankCalCursor.setDate(1);
-  const titles = { gratitude:'📅 تقویم شکرگذاری', shop:'📅 تقویم خریدها', beliefs:'📅 تقویم خواندن متن آینده' };
+  const titles = { gratitude:'📅 تقویم شکرگذاری', shop:'📅 تقویم بازی فراوانی', beliefs:'📅 تقویم خواندن متن آینده', tracking:'📅 تقویم ردیابی' };
   document.getElementById('bank-cal-title').textContent = titles[kind] || '📅 تقویم';
   document.getElementById('bank-cal-modal').classList.add('show');
   renderBankCal();
@@ -5764,6 +5882,15 @@ function bankCalEntriesByDay(){
     });
   }else if(bankCalKind==='beliefs'){
     (state.futureReadDays||[]).forEach(k=>{ (byDay[k]=byDay[k]||[]).push({read:true}); });
+  }else if(bankCalKind==='tracking'){
+    // کلیدهای مسیر عصبی ردیابی به سبک todayKey (بدون صفر ابتدایی) هستن، ولی این
+    // تقویم با کلیدهای dayKeyFromDate (صفر‌دار) کار می‌کنه؛ اینجا تبدیلش می‌کنیم.
+    const tn = ensureTrackingNeural();
+    Object.keys(tn.logs||{}).forEach(function(k){
+      if(tn.logs[k]!==true) return;
+      const dk = dayKeyFromDate(ndKeyToDate(k));
+      (byDay[dk]=byDay[dk]||[]).push({tracked:true});
+    });
   }
   return byDay;
 }
@@ -5807,6 +5934,8 @@ function showBankCalDay(key, items){
       </div>`).join('');
   }else if(bankCalKind==='beliefs'){
     detail.innerHTML = '<div class="sh-item"><div class="sh-row">✅ متن آینده‌ات رو این روز خوندی</div></div>';
+  }else if(bankCalKind==='tracking'){
+    detail.innerHTML = '<div class="sh-item"><div class="sh-row">📡 این روز ردیابی رو ثبت کردی</div></div>';
   }else{
     detail.innerHTML = items.map(g=>`
       <div class="sh-item">
